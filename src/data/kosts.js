@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-// src/data/kosts.js
-=======
->>>>>>> a9a8d69854707f7f5ed2e27fef6a17ee409d2c4a
 export const kosts = [
   {
     id: "K001",
@@ -36,11 +32,7 @@ export const kosts = [
     facilities: ["WiFi", "KM Dalam", "Dapur", "Parkir"],
     image:
       "https://images.unsplash.com/photo-1505693314120-0d443867891c?auto=format&fit=crop&w=1200&q=60",
-<<<<<<< HEAD
-=======
     description:
       "Kost ramah hewan peliharaan, lingkungan tenang dan akses mudah.",
->>>>>>> a9a8d69854707f7f5ed2e27fef6a17ee409d2c4a
   },
 ];
-export const initialKosts = kosts;

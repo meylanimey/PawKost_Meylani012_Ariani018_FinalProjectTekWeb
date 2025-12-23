@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -11,26 +11,29 @@ function rupiah(n) {
 }
 
 export default function KostCard({ kost }) {
+  const navigate = useNavigate();
+
   const facilities = kost.facilities ?? [];
   const showFacilities = facilities.slice(0, 3);
   const rest = facilities.length - showFacilities.length;
+
+  const handleSewa = () => {
+    console.log("[SEWA - CARD] klik sewa:", kost.id, kost.name);
+    navigate("/dashboard", {
+      state: { selectedKost: kost },
+    });
+  };
 
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       {/* Image */}
       <div className="relative">
-        <img
-          src={kost.image}
-          alt={kost.name}
-          className="h-48 w-full object-cover"
-        />
+        <img src={kost.image} alt={kost.name} className="h-48 w-full object-cover" />
 
         {/* Badge Type */}
         {kost.type && (
           <div className="absolute left-3 top-3">
-            <Badge className="bg-white/90 text-slate-900">
-              {kost.type}
-            </Badge>
+            <Badge className="bg-white/90 text-slate-900">{kost.type}</Badge>
           </div>
         )}
       </div>
@@ -41,9 +44,7 @@ export default function KostCard({ kost }) {
           <h3 className="line-clamp-1 text-lg font-semibold text-slate-900">
             {kost.name}
           </h3>
-          <p className="line-clamp-1 text-sm text-slate-600">
-            {kost.address}
-          </p>
+          <p className="line-clamp-1 text-sm text-slate-600">{kost.address}</p>
         </div>
 
         {/* Facilities */}
@@ -77,14 +78,6 @@ export default function KostCard({ kost }) {
             </Button>
           </Link>
 
-          <Button
-            className="flex-1 bg-slate-900 black-white hover:bg-slate-800"
-            onClick={() =>
-              console.log("Sewa kost:", kost.id, kost.name)
-            }
-          >
-            Sewa
-          </Button>
         </div>
       </div>
     </div>

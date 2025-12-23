@@ -1,39 +1,78 @@
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+
 import AdminHeader from "@/components/admin/AdminHeader";
 import FormData from "@/components/admin/FormData";
 import DataTable from "@/components/admin/DataTable";
 
-export default function Dashboard({ kosts, onAdd, onDelete, onEdit }) {
+export default function Dashboard({
+  kosts = [],
+  onAdd = () => {},
+  onDelete = () => {},
+  onEdit = () => {},
+}) {
+  const { state } = useLocation();
+  const selectedKost = state?.selectedKost;
+
+  const [editingKost, setEditingKost] = useState(null);
+
+  // auto tambah dari tombol Sewa
+  useEffect(() => {
+    if (!selectedKost) return;
+    const exists = kosts.some((k) => k.id === selectedKost.id);
+    if (!exists) {
+      console.log("[SEWA] masuk dashboard:", selectedKost);
+      onAdd(selectedKost);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKost]);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <section className="mx-auto max-w-6xl px-4 py-8 space-y-6">
-        {/* Header */}
-        <div className="bg-white border rounded-xl p-5">
+    <div>
+      <section className="mx-auto w-full px-4 sm:px-8 lg:px-16 xl:px-20 py-12 lg:py-20 space-y-12">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <AdminHeader />
-          <p className="text-sm text-gray-600 mt-1">
-            Kelola data kost (Checkpoint 1 — dummy).
-          </p>
+          <p className="mt-1 text-sm text-slate-600">Kelola data kost.</p>
         </div>
 
-        {/* Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Form */}
-          <div className="bg-white border rounded-xl p-5">
-            <h3 className="font-semibold mb-4">Tambah Kost</h3>
-            <FormData onAdd={onAdd} />
-            <p className="text-xs text-gray-500 mt-4">
-              Tips: isi nama, tipe, dan harga lalu klik Tambah.
-            </p>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h3 className="mb-4 text-base font-semibold text-slate-900">
+              {editingKost ? "Edit Kost" : "Tambah Kost"}
+            </h3>
+
+            <FormData
+              onAdd={onAdd}
+              onEdit={(updated) => {
+                console.log("[EDIT SUBMIT]", updated);
+                onEdit(updated);
+                setEditingKost(null);
+              }}
+              editingKost={editingKost}
+              onCancelEdit={() => setEditingKost(null)}
+            />
           </div>
 
           {/* Table */}
-          <div className="lg:col-span-2 bg-white border rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Daftar Kost</h3>
-              <span className="text-xs text-gray-500">
-                Total: {kosts?.length ?? 0}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-slate-900">
+                Daftar Kost
+              </h3>
+              <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                Total: {kosts.length}
               </span>
             </div>
-            <DataTable rows={kosts} onDelete={onDelete} onEdit={onEdit} />
+
+            <DataTable
+              rows={kosts}
+              onDelete={onDelete}
+              onStartEdit={(row) => {
+                console.log("[CLICK EDIT]", row);
+                setEditingKost(row);
+              }}
+            />
           </div>
         </div>
       </section>

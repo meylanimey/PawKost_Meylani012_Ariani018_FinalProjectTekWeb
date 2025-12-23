@@ -34,8 +34,12 @@ export default function KostDetail() {
   }
 
   const handleCheckout = () => {
-    // ✅ CP1: event handling (cukup console.log)
-    console.log("Checkout:", kost.id, kost.name);
+    // pindah ke dashboard + bawa data kost yang dipilih
+    navigate("/dashboard", {
+      state: {
+        selectedKost: kost,
+      },
+    });
   };
 
   return (
@@ -49,11 +53,7 @@ export default function KostDetail() {
       </Button>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <img
-          src={kost.image}
-          alt={kost.name}
-          className="h-80 w-full object-cover"
-        />
+        <img src={kost.image} alt={kost.name} className="h-80 w-full object-cover" />
 
         <div className="space-y-4 p-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -81,7 +81,6 @@ export default function KostDetail() {
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            {/* Sewa: hitam */}
             <Button
               size="lg"
               variant="outline"
@@ -91,7 +90,6 @@ export default function KostDetail() {
               Sewa
             </Button>
 
-            {/* Tanya Pemilik: hitam (fix tulisan ga keliatan) */}
             <Button
               size="lg"
               variant="outline"
