@@ -16,9 +16,7 @@ function PublicLayout({ children }) {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-slate-950 text-white">
-        {children}
-      </main>
+      <main className="min-h-screen bg-white text-slate-900">{children}</main>
       <Footer />
     </>
   );
@@ -46,11 +44,6 @@ export default function App() {
             </PublicLayout>
           }
         />
-
-        {/* ADMIN ROUTES (NANTI) */}
-        {/*
-        <Route path="/admin" element={<AdminDashboard />} />
-        */}
       </Routes>
     </BrowserRouter>
   );
