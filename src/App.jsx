@@ -1,64 +1,75 @@
-<<<<<<< HEAD
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
-import Dashboard from "@/pages/admin/Dashboard";
-import { initialKosts } from "@/data/kosts";
+
+// Pages
+import Home from "./pages/public/Home";
+import KostDetail from "./pages/public/KostDetail";
+import AdminDashboard from "./pages/admin/Dashboard";
+
+// Data
+import { initialKosts } from "./data/kosts";
+
+// Components
+import Navbar from "./components/public/Navbar";
+import Footer from "./components/public/Footer";
+
+
+/**
+ * Layout untuk PUBLIC USER
+ */
+function PublicLayout({ children }) {
+  return (
+    <>
+      <Navbar />
+      <main className="min-h-screen bg-slate-950 text-white">{children}</main>
+      <Footer />
+    </>
+  );
+}
+
+/**
+ * Layout untuk ADMIN
+ */
+function AdminLayout({ children }) {
+  return (
+    <>
+      <Navbar />
+      <main className="min-h-screen bg-gray-50 text-black">{children}</main>
+    </>
+  );
+}
 
 export default function App() {
+  // ✅ State pusat (dipakai Public + Admin)
   const [kosts, setKosts] = useState(initialKosts);
 
+  // ✅ Admin: tambah data (dummy)
   const onAdd = ({ name, type, price }) => {
-    if (!name.trim() || !price.trim()) return;
+    if (!name?.trim() || !price?.trim()) return;
 
     const newItem = {
       id: String(Date.now()),
       name,
       type,
       price: Number(price),
+      // field lain opsional (boleh diabaikan CP1)
     };
 
     console.log("[ADD]", newItem);
     setKosts((prev) => [newItem, ...prev]);
   };
 
+  // ✅ Admin: hapus data
   const onDelete = (item) => {
     console.log("[DELETE]", item);
     setKosts((prev) => prev.filter((k) => k.id !== item.id));
   };
 
+  // ✅ Admin: edit (CP1 cukup log)
   const onEdit = (item) => {
-    console.log("[EDIT] CP1 log saja:", item);
+    console.log("[EDIT] CP1 log:", item);
   };
 
-  return <Dashboard kosts={kosts} onAdd={onAdd} onDelete={onDelete} onEdit={onEdit} />;
-}
-=======
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-// Pages
-import Home from "./pages/public/Home";
-import KostDetail from "./pages/public/KostDetail";
-
-// Components
-import Navbar from "./components/public/Navbar";
-import Footer from "./components/public/Footer";
-
-/**
- * Layout untuk PUBLIC USER
- * Navbar & Footer ditaruh di sini
- */
-function PublicLayout({ children }) {
-  return (
-    <>
-      <Navbar />
-      <main className="min-h-screen bg-slate-950 text-white">
-        {children}
-      </main>
-      <Footer />
-    </>
-  );
-}
-
-export default function App() {
   return (
     <BrowserRouter>
       <Routes>
@@ -67,7 +78,8 @@ export default function App() {
           path="/"
           element={
             <PublicLayout>
-              <Home />
+              {/* opsional: kirim kosts biar public sinkron */}
+              <Home kosts={kosts} />
             </PublicLayout>
           }
         />
@@ -81,12 +93,21 @@ export default function App() {
           }
         />
 
-        {/* ADMIN ROUTES (NANTI) */}
-        {/*
-        <Route path="/admin" element={<AdminDashboard />} />
-        */}
+        {/* ADMIN ROUTE */}
+        <Route
+          path="/admin"
+          element={
+            <AdminLayout>
+              <AdminDashboard
+                kosts={kosts}
+                onAdd={onAdd}
+                onDelete={onDelete}
+                onEdit={onEdit}
+              />
+            </AdminLayout>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );
 }
->>>>>>> a2bdc4a882deb7ba432e310a2a8a8d18646b9fa7

@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-export const initialKosts = [
-  {
-    id: "1",
-    name: "Kost Orange Tlogomas",
-    type: "Putra",
-    price: 850000,
-    facilities: ["WiFi", "KM Dalam", "Parkir"],
-    address: "Jl. Raya Tlogomas No. 50",
-=======
 // src/data/kosts.js
 export const kosts = [
   {
@@ -42,6 +32,6 @@ export const kosts = [
     facilities: ["WiFi", "KM Luar", "Dapur", "Parkir"],
     image:
       "https://images.unsplash.com/photo-1505693314120-0d443867891c?auto=format&fit=crop&w=1200&q=60",
->>>>>>> a2bdc4a882deb7ba432e310a2a8a8d18646b9fa7
   },
 ];
+export const initialKosts = kosts;
