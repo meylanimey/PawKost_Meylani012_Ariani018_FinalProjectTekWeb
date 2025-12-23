@@ -1,35 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
+import Dashboard from "@/pages/admin/Dashboard";
+import { initialKosts } from "@/data/kosts";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [kosts, setKosts] = useState(initialKosts);
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  const onAdd = ({ name, type, price }) => {
+    if (!name.trim() || !price.trim()) return;
+
+    const newItem = {
+      id: String(Date.now()),
+      name,
+      type,
+      price: Number(price),
+    };
+
+    console.log("[ADD]", newItem);
+    setKosts((prev) => [newItem, ...prev]);
+  };
+
+  const onDelete = (item) => {
+    console.log("[DELETE]", item);
+    setKosts((prev) => prev.filter((k) => k.id !== item.id));
+  };
+
+  const onEdit = (item) => {
+    console.log("[EDIT] CP1 log saja:", item);
+  };
+
+  return <Dashboard kosts={kosts} onAdd={onAdd} onDelete={onDelete} onEdit={onEdit} />;
 }
-
-export default App
