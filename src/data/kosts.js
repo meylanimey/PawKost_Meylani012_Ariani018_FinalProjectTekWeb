@@ -25,7 +25,7 @@ export const kosts = [
   },
   {
     id: "K003",
-    name: "Kost Lucu",
+    name: "Kost Damai",
     type: "Pet Friendly",
     price: 1000000,
     address: "Jl. Gejayan, Depok, Yogyakarta",

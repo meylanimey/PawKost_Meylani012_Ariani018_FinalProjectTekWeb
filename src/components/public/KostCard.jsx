@@ -78,7 +78,7 @@ export default function KostCard({ kost }) {
           </Link>
 
           <Button
-            className="flex-1 bg-slate-900 text-black hover:bg-slate-800"
+            className="flex-1 bg-slate-900 black-white hover:bg-slate-800"
             onClick={() =>
               console.log("Sewa kost:", kost.id, kost.name)
             }
