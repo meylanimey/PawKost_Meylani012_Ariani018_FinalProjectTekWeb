@@ -1,40 +1,86 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+<<<<<<< Updated upstream
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+=======
+import {
+  ArrowLeft,
+  MapPin,
+  BadgeCheck,
+  MessageCircle,
+  ClipboardCheck,
+} from "lucide-react";
+>>>>>>> Stashed changes
 
-function rupiah(n) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(n);
+import KostCard from "@/components/public/KostCard";
+import ContactKostModal from "@/components/public/ContactKostModal";
+import BookingKostModal from "@/components/public/BookingKostModal";
+import { Kosts } from "@/data/Kosts";
+
+function formatRupiah(num) {
+  return Number(num || 0).toLocaleString("id-ID");
 }
 
 export default function KostDetail({ kosts = [] }) {
   const { id } = useParams();
   const navigate = useNavigate();
 
+<<<<<<< Updated upstream
   const kost = useMemo(
     () => kosts.find((k) => String(k.id) === String(id)),
     [kosts, id]
   );
+=======
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 40);
+    return () => clearTimeout(t);
+  }, []);
+
+  const kost = useMemo(
+    () => Kosts.find((k) => String(k.id) === String(id)),
+    [id]
+  );
+
+  const rekomendasiLain = useMemo(() => {
+    return Kosts.filter((k) => k.id !== kost?.id).slice(0, 6);
+  }, [kost]);
+
+  const [openContact, setOpenContact] = useState(false); // untuk "Tanya via WA" (template pilihan)
+  const [openBooking, setOpenBooking] = useState(false); // untuk "Ajukan Sewa" (form + kalender)
+>>>>>>> Stashed changes
 
   if (!kost) {
     return (
-      <div className="mx-auto max-w-5xl px-6 py-10">
-        <p className="text-slate-700">Data kost tidak ditemukan.</p>
-        <Button
-          variant="outline"
-          className="mt-4 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white"
-          onClick={() => navigate("/")}
-        >
-          Kembali ke Beranda
-        </Button>
-      </div>
+      <main className="min-h-screen bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-10">
+          <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+            <h1 className="text-2xl font-medium text-gray-900">
+              Kost tidak ditemukan 😿
+            </h1>
+            <p className="mt-2 text-gray-600">
+              Data kost tidak tersedia atau ID tidak valid.
+            </p>
+            <button
+              onClick={() => navigate(-1)}
+              className="
+                mt-6 inline-flex items-center gap-2
+                rounded-xl px-5 py-2.5 font-medium
+                border border-gray-200 bg-white text-gray-900
+                hover:bg-gray-50 transition
+              "
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Kembali
+            </button>
+          </div>
+        </div>
+      </main>
     );
   }
 
+<<<<<<< Updated upstream
   const handleCheckout = () => {
     console.log("[SEWA - DETAIL] klik sewa:", kost.id, kost.name);
 
@@ -52,16 +98,32 @@ export default function KostDetail({ kosts = [] }) {
     alert("Permintaan sewa terkirim. Admin akan memproses.");
   };
 
+=======
+>>>>>>> Stashed changes
   return (
-    <div className="mx-auto max-w-5xl px-6 py-10">
-      <Button
-        variant="outline"
-        className="mb-6 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white"
-        onClick={() => navigate(-1)}
+    <main className="min-h-screen bg-white">
+      <div
+        className={[
+          "mx-auto max-w-6xl px-4 py-8 space-y-12",
+          "transition-all duration-700",
+          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
+        ].join(" ")}
       >
-        ← Kembali
-      </Button>
+        <button
+          onClick={() => navigate(-1)}
+          className="
+            inline-flex items-center gap-2
+            px-4 py-2 rounded-lg
+            border border-gray-200
+            text-gray-700 hover:bg-gray-50
+            transition active:scale-[0.99]
+          "
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Kembali
+        </button>
 
+<<<<<<< Updated upstream
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <img
           src={kost.image}
@@ -73,48 +135,128 @@ export default function KostDetail({ kosts = [] }) {
           <div className="flex flex-wrap items-center gap-2">
             {kost.type && <Badge variant="secondary">{kost.type}</Badge>}
             <Badge variant="outline">{kost.id}</Badge>
+=======
+        <div className="grid lg:grid-cols-2 gap-8">
+          <div className="rounded-3xl overflow-hidden border border-gray-200 shadow-sm">
+            <img
+              src={kost.image}
+              alt={kost.name}
+              className="w-full h-[360px] object-cover"
+            />
+>>>>>>> Stashed changes
           </div>
 
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">{kost.name}</h1>
-            <p className="mt-1 text-slate-600">{kost.address}</p>
-          </div>
+          {/* INFO */}
+          <div className="space-y-5">
+            <div className="rounded-3xl border border-gray-200 p-6 bg-white">
+              <h1 className="text-2xl md:text-3xl font-medium text-gray-900">
+                {kost.name}
+              </h1>
 
-          <p className="text-slate-700">{kost.description}</p>
+              <p className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+                <MapPin className="w-4 h-4" />
+                {kost.location}
+              </p>
 
-          <div className="flex flex-wrap gap-2">
-            {(kost.facilities ?? []).map((f) => (
-              <Badge key={f} variant="secondary">
-                {f}
-              </Badge>
-            ))}
-          </div>
+              <div className="mt-3 flex items-center gap-3">
+                <span className="px-3 py-1 rounded-full text-xs border bg-gray-50">
+                  {kost.type}
+                </span>
+                <span className="inline-flex items-center gap-1 text-xs text-green-600">
+                  <BadgeCheck className="w-4 h-4" />
+                  Tersedia
+                </span>
+              </div>
 
-          <p className="text-xl font-bold text-indigo-600">
-            {rupiah(kost.price)} / bulan
-          </p>
+              <p className="mt-4 text-lg font-medium text-gray-900">
+                Rp {formatRupiah(kost.price)}
+                <span className="text-sm text-gray-500"> / 3 bulan</span>
+              </p>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Button
-              size="lg"
-              variant="outline"
-              className="sm:w-auto border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white"
-              onClick={handleCheckout}
-            >
-              Sewa
-            </Button>
+              <div className="mt-5">
+                <p className="text-sm font-medium text-gray-900">Fasilitas</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {kost.facilities.map((f, i) => (
+                    <span
+                      key={i}
+                      className="
+                        px-3 py-1 text-xs rounded-full border
+                        text-gray-700 bg-white
+                        hover:-translate-y-0.5 hover:shadow-sm transition
+                      "
+                    >
+                      {f}
+                    </span>
+                  ))}
+                </div>
+              </div>
 
-            <Button
-              size="lg"
-              variant="outline"
-              className="sm:w-auto border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white"
-              onClick={() => console.log("Tanya pemilik:", kost.id)}
-            >
-              Tanya Pemilik
-            </Button>
+              <p className="mt-5 text-sm text-gray-700 leading-relaxed">
+                {kost.description || "Belum ada deskripsi kost."}
+              </p>
+            </div>
+
+            {/* CTA */}
+            <div className="grid sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setOpenBooking(true)}
+                className="
+                  inline-flex items-center justify-center gap-2
+                  px-5 py-3 rounded-xl
+                  font-medium text-white
+                  bg-blue-600 hover:bg-blue-700
+                  transition active:scale-[0.99]
+                "
+              >
+                <ClipboardCheck className="w-5 h-5" />
+                Ajukan Sewa
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setOpenContact(true)}
+                className="
+                  inline-flex items-center justify-center gap-2
+                  px-5 py-3 rounded-xl
+                  font-medium text-white
+                  bg-[#25D366] hover:brightness-95
+                  transition active:scale-[0.99]
+                "
+              >
+                <MessageCircle className="w-5 h-5" />
+                Tanya via WhatsApp
+              </button>
+            </div>
           </div>
         </div>
+
+        <section>
+          <h2 className="text-xl font-medium text-gray-900 mb-4">
+            Rekomendasi Lainnya
+          </h2>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rekomendasiLain.map((k) => (
+              <KostCard key={k.id} kost={k} />
+            ))}
+          </div>
+        </section>
       </div>
-    </div>
+
+      <BookingKostModal
+        open={openBooking}
+        onClose={() => setOpenBooking(false)}
+        kost={kost}
+        waNumber="6281200000000"
+      />
+
+      <ContactKostModal
+        open={openContact}
+        onClose={() => setOpenContact(false)}
+        kost={kost}
+        waNumber="6281200000000"
+      />
+    </main>
   );
 }

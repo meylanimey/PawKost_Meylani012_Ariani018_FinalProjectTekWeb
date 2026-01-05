@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 
 #Bagian Penjelasan Fitur Admin
 Sisi Admin pada aplikasi ini berfungsi untuk mengelola data kost, mulai dari menambah data baru, mengedit data yang sudah ada, hingga menghapus data. Halaman Admin dirancang dengan antarmuka yang sederhana, responsif, dan terstruktur menggunakan Tailwind CSS serta komponen UI seperti Button dan Badge.
@@ -65,3 +66,193 @@ navigate("/dashboard", {
 });
 
 Bagian ini memungkinkan admin untuk langsung meninjau kost yang sedang diminati oleh user nya.
+=======
+Bagian Penjelasan Fitur User
+
+Sisi **User** pada aplikasi **PAW KOST** berfungsi sebagai antarmuka utama bagi pengguna untuk **melihat katalog kost**, **mengetahui detail kost**, serta **melakukan interaksi awal** seperti melihat detail dan menyatakan minat sewa.
+Pada **Checkpoint 1**, User Side difokuskan pada **UI statis**, **dummy data**, dan **event handling dasar**, tanpa integrasi backend.
+
+Antarmuka User dirancang **bersih, responsif, dan mudah dipahami** menggunakan **Tailwind CSS** serta **komponen UI dari shadcn/ui** seperti `Button` dan `Badge`.
+
+Struktur utama fitur User terdiri dari:
+
+```
+src/
+ ├─ components/
+ │   └─ public/
+ │        ├─ Navbar.jsx
+ │        ├─ KostCard.jsx
+ │        └─ Footer.jsx
+ │
+ ├─ pages/
+ │   └─ public/
+ │        ├─ Home.jsx
+ │        └─ KostDetail.jsx
+ │
+ └─ data/
+      └─ kosts.js
+```
+
+---
+
+## 1) Home.jsx
+
+`Home.jsx` merupakan **halaman utama User** yang menampilkan **katalog kost**.
+
+Fungsi utama halaman ini:
+
+* Menampilkan daftar kost dalam bentuk grid
+* Mengambil data dari file dummy `kosts.js`
+* Melakukan mapping data kost ke komponen `KostCard`
+
+Alur kerja:
+
+1. Data kost diimpor dari `kosts.js`
+2. Data di-loop menggunakan `.map()`
+3. Setiap item ditampilkan sebagai satu `KostCard`
+
+Dengan pendekatan ini, Home.jsx berperan sebagai **container page** yang mengatur data dan layout, sementara detail tampilan diserahkan ke komponen atomic.
+
+---
+
+## 2) KostCard.jsx
+
+`KostCard.jsx` adalah **komponen atomic** yang digunakan untuk menampilkan **satu data kost** dalam katalog.
+
+Informasi yang ditampilkan:
+
+* Gambar kost
+* Tipe kost (Putri / Putra / Pet Friendly)
+* Nama dan alamat kost
+* Fasilitas utama
+* Harga per bulan
+
+Komponen ini juga memiliki **dua tombol interaktif**:
+
+* **Detail** → mengarahkan user ke halaman detail kost menggunakan React Router (`/detail/:id`)
+* **Sewa** → menjalankan event handling berupa `console.log()` sebagai simulasi (sesuai CP1)
+
+Contoh event handling:
+
+```js
+console.log("Sewa kost:", kost.id, kost.name);
+```
+
+KostCard dibuat reusable sehingga dapat digunakan kembali tanpa mengubah struktur utama halaman.
+
+---
+
+## 3) KostDetail.jsx
+
+`KostDetail.jsx` adalah halaman untuk menampilkan **informasi lengkap** dari satu kost.
+
+Fungsi utama:
+
+* Mengambil parameter `id` dari URL menggunakan `useParams`
+* Mencari data kost yang sesuai dari `kosts.js`
+* Menampilkan detail lengkap seperti:
+
+  * Gambar
+  * Nama
+  * Alamat
+  * Deskripsi
+  * Fasilitas
+  * Harga
+
+Selain itu, halaman ini memiliki tombol:
+
+* **Kembali** → kembali ke halaman sebelumnya
+* **Sewa / Tanya Pemilik** → event handling berupa `console.log()`
+
+Jika data tidak ditemukan, halaman akan menampilkan pesan fallback:
+
+```js
+Data kost tidak ditemukan
+```
+
+Hal ini memastikan UI tetap aman dan tidak error.
+
+---
+
+## 4) Navbar.jsx
+
+`Navbar.jsx` berfungsi sebagai **navigasi utama** pada sisi User.
+
+Fitur utama:
+
+* Menampilkan nama aplikasi **PAW KOST**
+* Menu navigasi seperti:
+
+  * Katalog
+  * Kontak
+  * Masuk
+* Hamburger menu untuk tampilan mobile
+
+Navbar diletakkan di **layout utama** sehingga muncul di semua halaman User.
+
+---
+
+## 5) Footer.jsx
+
+`Footer.jsx` menampilkan informasi tambahan di bagian bawah halaman.
+
+Isi footer:
+
+* Deskripsi singkat aplikasi
+* Menu navigasi (Beranda, Daftar Kost, Kontak)
+* Informasi kontak (lokasi, nomor, email)
+
+Footer berfungsi sebagai pelengkap UI agar tampilan aplikasi terlihat **lebih profesional dan lengkap**.
+
+---
+
+## 6) kosts.js (Dummy Data)
+
+File `kosts.js` berisi **data dummy** berupa array objek kost.
+
+Digunakan oleh:
+
+* Home.jsx → menampilkan katalog
+* KostDetail.jsx → menampilkan detail
+
+Isi data meliputi:
+
+* id
+* name
+* type
+* address
+* price
+* facilities
+* image
+* description
+
+Penggunaan dummy data ini sesuai dengan ketentuan **Checkpoint 1**, yaitu memastikan UI dapat berjalan tanpa backend.
+
+---
+
+## 7) Routing User
+
+Routing User diatur menggunakan **React Router** pada `App.jsx`.
+
+Rute yang tersedia:
+
+* `/` → Home (Katalog Kost)
+* `/detail/:id` → KostDetail
+
+Routing ini memungkinkan navigasi antar halaman tanpa reload.
+
+---
+
+## 8) Kesesuaian dengan Checkpoint 1
+
+User Side pada aplikasi ini telah memenuhi seluruh kriteria **Checkpoint 1**, yaitu:
+
+* UI statis
+* Struktur folder rapi
+* Komponen atomic
+* Dummy data
+* Event handling sederhana
+* Routing dasar
+* Tampilan berhasil muncul di browser
+
+>>>>>>> Stashed changes
