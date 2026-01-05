@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 
 export default function FormData({
   onAdd = () => {},
@@ -27,27 +29,22 @@ export default function FormData({
     e.preventDefault();
 
     if (editingKost) {
-      const updated = {
+      onEdit({
         ...editingKost,
         name,
         type,
         price: Number(price),
-      };
-      console.log("[FORM EDIT SUBMIT]", updated);
-      onEdit(updated);
+      });
       resetForm();
       return;
     }
 
-    const newKost = {
+    onAdd({
       id: crypto.randomUUID(),
       name,
       type,
       price: Number(price),
-    };
-
-    console.log("[FORM ADD SUBMIT]", newKost);
-    onAdd(newKost);
+    });
     resetForm();
   };
 
@@ -67,8 +64,8 @@ export default function FormData({
         <label className="block text-sm font-medium text-slate-700">
           Nama Kost
         </label>
-        <input
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+        <Input
+          className="rounded-xl"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Contoh: Kost Melati"
@@ -77,7 +74,9 @@ export default function FormData({
       </div>
 
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-slate-700">Tipe</label>
+        <label className="block text-sm font-medium text-slate-700">
+          Tipe
+        </label>
         <select
           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
           value={type}
@@ -93,8 +92,8 @@ export default function FormData({
         <label className="block text-sm font-medium text-slate-700">
           Harga / bulan
         </label>
-        <input
-          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+        <Input
+          className="rounded-xl"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
           placeholder="Contoh: 850000"
@@ -104,21 +103,19 @@ export default function FormData({
       </div>
 
       <div className="flex gap-2 pt-1">
-        <button
-          type="submit"
-          className="inline-flex flex-1 items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-black transition  active:scale-[0.99]"
-        >
+        <Button type="submit" className="flex-1 rounded-xl">
           {editingKost ? "Simpan" : "Tambah"}
-        </button>
+        </Button>
 
         {editingKost && (
-          <button
+          <Button
             type="button"
+            variant="outline"
+            className="flex-1 rounded-xl"
             onClick={handleCancel}
-            className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 active:scale-[0.99]"
           >
             Batal
-          </button>
+          </Button>
         )}
       </div>
     </form>

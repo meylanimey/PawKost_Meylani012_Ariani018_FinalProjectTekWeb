@@ -1,81 +1,106 @@
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
-import AdminHeader from "@/components/admin/AdminHeader";
-import FormData from "@/components/admin/FormData";
-import DataTable from "@/components/admin/DataTable";
+import DataTable from "../../components/admin/DataTable";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 
-export default function Dashboard({
-  kosts = [],
-  onAdd = () => {},
-  onDelete = () => {},
-  onEdit = () => {},
-}) {
-  const { state } = useLocation();
-  const selectedKost = state?.selectedKost;
+export default function Dashboard({ kosts = [], onDelete = () => {} }) {
+  const [query, setQuery] = useState("");
+  const [type, setType] = useState("Semua Tipe");
 
-  const [editingKost, setEditingKost] = useState(null);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return kosts.filter((k) => {
+      const okQ =
+        !q ||
+        (k.name ?? "").toLowerCase().includes(q) ||
+        (k.address ?? "").toLowerCase().includes(q);
+      const okT = type === "Semua Tipe" ? true : (k.type ?? "") === type;
+      return okQ && okT;
+    });
+  }, [kosts, query, type]);
 
-  // auto tambah dari tombol Sewa
-  useEffect(() => {
-    if (!selectedKost) return;
-    const exists = kosts.some((k) => k.id === selectedKost.id);
-    if (!exists) {
-      console.log("[SEWA] masuk dashboard:", selectedKost);
-      onAdd(selectedKost);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedKost]);
+  const total = filtered.length;
+  const tersedia = filtered.filter(
+    (k) => (k.status ?? "Tersedia") === "Tersedia"
+  ).length;
+  const tidakTersedia = filtered.filter(
+    (k) => (k.status ?? "Tersedia") === "Tidak Tersedia"
+  ).length;
 
   return (
-    <div>
-      <section className="mx-auto w-full px-4 sm:px-8 lg:px-16 xl:px-20 py-12 lg:py-20 space-y-12">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <AdminHeader />
-          <p className="mt-1 text-sm text-slate-600">Kelola data kost.</p>
-        </div>
+    <div className="space-y-5">
+      {/* TITLE + ADD */}
+      <div className="flex items-start justify-between">
+        <h1 className="text-[34px] font-extrabold leading-tight text-[#734128]">
+          Manajemen
+          <br />
+          Data Kost
+        </h1>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Form */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h3 className="mb-4 text-base font-semibold text-slate-900">
-              {editingKost ? "Edit Kost" : "Tambah Kost"}
-            </h3>
+        <Button
+          asChild
+          className="rounded-xl bg-[#F2D8AF] px-4 text-xs font-semibold text-[#734128] hover:bg-[#e6c89b]"
+        >
+          <Link to="/admin/add">+ Tambah Kost</Link>
+        </Button>
+      </div>
 
-            <FormData
-              onAdd={onAdd}
-              onEdit={(updated) => {
-                console.log("[EDIT SUBMIT]", updated);
-                onEdit(updated);
-                setEditingKost(null);
-              }}
-              editingKost={editingKost}
-              onCancelEdit={() => setEditingKost(null)}
+      <div className="rounded-2xl bg-[#F7F3EE] p-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3">
+  
+          <div className="relative w-[220px]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#734128]/60">
+              🔍
+            </span>
+            <Input
+              className="h-9 rounded-xl bg-white pl-9 text-xs font-light text-[#734128] shadow-sm placeholder:text-[#734128]/40"
+              placeholder="Cari Kost..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
             />
           </div>
 
-          {/* Table */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-900">
-                Daftar Kost
-              </h3>
-              <span className="rounded-lg bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-                Total: {kosts.length}
-              </span>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            className="h-9 rounded-xl bg-white px-4 text-[13px] font-bold text-[#734128] shadow-sm outline-none"
+          >
+            <option>Semua Tipe</option>
+            <option>Putra</option>
+            <option>Putri</option>
+            <option>Campur</option>
+            <option>Pet Friendly</option>
+          </select>
+
+          <div className="ml-auto overflow-hidden rounded-xl border border-[#E8DCCF] bg-white shadow-sm">
+            <div className="grid grid-cols-3">
+              <div className="px-5 py-2 text-center">
+                <p className="text-[11px] font-bold text-[#734128]">
+                  Total kost: {total}
+                </p>
+              </div>
+
+              <div className="border-l border-[#E8DCCF] px-5 py-2 text-center">
+                <p className="text-[11px] font-bold text-[#734128]">
+                  Tersedia: {tersedia}
+                </p>
+              </div>
+
+              <div className="border-l border-[#E8DCCF] px-5 py-2 text-center">
+                <p className="text-[11px] font-bold text-[#734128]">
+                  Tidak Tersedia: {tidakTersedia}
+                </p>
+              </div>
             </div>
-
-            <DataTable
-              rows={kosts}
-              onDelete={onDelete}
-              onStartEdit={(row) => {
-                console.log("[CLICK EDIT]", row);
-                setEditingKost(row);
-              }}
-            />
           </div>
         </div>
-      </section>
+      </div>
+
+      <div className="rounded-2xl bg-[#F7F3EE] p-4">
+        <DataTable rows={filtered} onDelete={onDelete} />
+      </div>
     </div>
   );
 }

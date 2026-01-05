@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -11,24 +11,39 @@ function rupiah(n) {
 }
 
 export default function KostCard({ kost }) {
-  const navigate = useNavigate();
-
   const facilities = kost.facilities ?? [];
   const showFacilities = facilities.slice(0, 3);
   const rest = facilities.length - showFacilities.length;
 
+  // ✅ user klik sewa: simpan request ke localStorage (tanpa masuk dashboard)
   const handleSewa = () => {
     console.log("[SEWA - CARD] klik sewa:", kost.id, kost.name);
-    navigate("/dashboard", {
-      state: { selectedKost: kost },
-    });
+
+    const key = "pending_sewa";
+    const existing = JSON.parse(localStorage.getItem(key) || "[]");
+
+    // cegah duplikat (biar tidak dobel kalau user klik berkali-kali)
+    const already = existing.some((k) => String(k.id) === String(kost.id));
+    if (!already) {
+      localStorage.setItem(key, JSON.stringify([kost, ...existing]));
+      console.log("[SEWA] disimpan ke localStorage");
+    } else {
+      console.log("[SEWA] sudah ada di pending");
+    }
+
+    // Optional: beri feedback cepat ke user
+    alert("Permintaan sewa terkirim. Admin akan memproses.");
   };
 
   return (
     <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md">
       {/* Image */}
       <div className="relative">
-        <img src={kost.image} alt={kost.name} className="h-48 w-full object-cover" />
+        <img
+          src={kost.image}
+          alt={kost.name}
+          className="h-48 w-full object-cover"
+        />
 
         {/* Badge Type */}
         {kost.type && (
@@ -78,6 +93,10 @@ export default function KostCard({ kost }) {
             </Button>
           </Link>
 
+          {/* ✅ Tombol Sewa */}
+          <Button className="flex-1" onClick={handleSewa}>
+            Sewa
+          </Button>
         </div>
       </div>
     </div>

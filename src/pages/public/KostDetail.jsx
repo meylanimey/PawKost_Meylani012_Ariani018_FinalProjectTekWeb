@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { kosts } from "../../data/kosts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -12,11 +11,14 @@ function rupiah(n) {
   }).format(n);
 }
 
-export default function KostDetail() {
+export default function KostDetail({ kosts = [] }) {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const kost = useMemo(() => kosts.find((k) => k.id === id), [id]);
+  const kost = useMemo(
+    () => kosts.find((k) => String(k.id) === String(id)),
+    [kosts, id]
+  );
 
   if (!kost) {
     return (
@@ -34,12 +36,20 @@ export default function KostDetail() {
   }
 
   const handleCheckout = () => {
-    // pindah ke dashboard + bawa data kost yang dipilih
-    navigate("/dashboard", {
-      state: {
-        selectedKost: kost,
-      },
-    });
+    console.log("[SEWA - DETAIL] klik sewa:", kost.id, kost.name);
+
+    const key = "pending_sewa";
+    const existing = JSON.parse(localStorage.getItem(key) || "[]");
+    const already = existing.some((k) => String(k.id) === String(kost.id));
+
+    if (!already) {
+      localStorage.setItem(key, JSON.stringify([kost, ...existing]));
+      console.log("[SEWA] disimpan ke localStorage");
+    } else {
+      console.log("[SEWA] sudah ada di pending");
+    }
+
+    alert("Permintaan sewa terkirim. Admin akan memproses.");
   };
 
   return (
@@ -53,7 +63,11 @@ export default function KostDetail() {
       </Button>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <img src={kost.image} alt={kost.name} className="h-80 w-full object-cover" />
+        <img
+          src={kost.image}
+          alt={kost.name}
+          className="h-80 w-full object-cover"
+        />
 
         <div className="space-y-4 p-6">
           <div className="flex flex-wrap items-center gap-2">

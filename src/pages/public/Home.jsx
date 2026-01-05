@@ -1,15 +1,13 @@
 import { useMemo, useState } from "react";
 import KostCard from "../../components/public/KostCard";
-import { kosts } from "../../data/kosts";
 
-export default function Home() {
-  const [dataKost] = useState(kosts);
+export default function Home({ kosts = [] }) {
   const [type, setType] = useState("Semua");
 
   const filtered = useMemo(() => {
-    if (type === "Semua") return dataKost;
-    return dataKost.filter((k) => k.type === type);
-  }, [dataKost, type]);
+    if (type === "Semua") return kosts;
+    return kosts.filter((k) => k.type === type);
+  }, [kosts, type]);
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-10">
@@ -21,7 +19,6 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Filter tipe kost (tanpa reset) */}
         <select
           value={type}
           onChange={(e) => {
@@ -34,6 +31,7 @@ export default function Home() {
           <option>Putra</option>
           <option>Putri</option>
           <option>Pet Friendly</option>
+          <option>Campur</option>
         </select>
       </div>
 

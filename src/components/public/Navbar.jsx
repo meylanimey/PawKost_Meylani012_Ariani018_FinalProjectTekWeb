@@ -7,6 +7,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        
         {/* Brand */}
         <div className="flex items-center gap-3">
           <Link to="/" className="text-lg font-bold tracking-tight">
@@ -21,6 +22,7 @@ export default function Navbar() {
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
+          
           {/* Desktop Menu */}
           <nav className="hidden items-center gap-6 md:flex">
             <a
@@ -37,7 +39,7 @@ export default function Navbar() {
             </a>
           </nav>
 
-          {/* Masuk */}
+          {/* Masuk (dummy, CP1) */}
           <button
             onClick={() => console.log("Masuk diklik")}
             className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-50"
@@ -45,7 +47,7 @@ export default function Navbar() {
             Masuk
           </button>
 
-          {/* Hamburger (selalu tampil) */}
+          {/* Hamburger */}
           <button
             className="rounded-lg border border-slate-200 bg-white p-2 text-slate-900 hover:bg-slate-50"
             onClick={() => setOpen((v) => !v)}
@@ -64,17 +66,24 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Dropdown Hamburger */}
+      {/* Dropdown Hamburger (PUBLIC ONLY) */}
       {open && (
         <div className="border-t border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-6 py-3">
-            <Link
-              to="/dashboard"
+          <div className="mx-auto max-w-7xl px-6 py-3 space-y-1">
+            <a
+              href="#katalog"
               onClick={() => setOpen(false)}
               className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
-              Dashboard
-            </Link>
+              Katalog
+            </a>
+            <a
+              href="#kontak"
+              onClick={() => setOpen(false)}
+              className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Kontak
+            </a>
           </div>
         </div>
       )}
