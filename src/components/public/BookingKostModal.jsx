@@ -32,7 +32,7 @@ export default function BookingKostModal({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [checkIn, setCheckIn] = useState(() => toISODate(new Date()));
-  const [duration, setDuration] = useState("3"); // bulan
+  const [duration, setDuration] = useState("1"); // bulan
   const [note, setNote] = useState("");
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function BookingKostModal({
       ``,
       `Kost: ${kost.name}`,
       `Lokasi: ${kost.location}`,
-      `Harga: Rp ${formatRupiah(kost.price)} / 3 bulan`,
+      `Harga: Rp ${formatRupiah(kost.price)} / 1 bulan`,
       ``,
       `Nama: ${name || "(isi nama)"}`,
       `No. WA: ${phone || "(isi no WA)"}`,
@@ -153,7 +153,7 @@ export default function BookingKostModal({
               <p className="text-sm text-gray-600 mt-1">{kost.location}</p>
               <p className="text-sm text-gray-900 mt-2">
                 Rp {formatRupiah(kost.price)}{" "}
-                <span className="text-gray-500">/ 3 bulan</span>
+                <span className="text-gray-500">/ 1 bulan</span>
               </p>
             </div>
 

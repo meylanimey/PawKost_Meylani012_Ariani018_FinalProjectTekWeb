@@ -10,7 +10,7 @@ const DEFAULT_TEMPLATES = [
         kost.name
       }\nLokasi: ${kost.location}\nTipe: ${kost.type}\nHarga: Rp ${Number(
         kost.price || 0
-      ).toLocaleString("id-ID")} / 3 bulan\n\nApakah masih tersedia?`,
+      ).toLocaleString("id-ID")} / 1 bulan\n\nApakah masih tersedia?`,
   },
   {
     id: "alamat",

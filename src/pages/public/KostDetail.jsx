@@ -124,7 +124,7 @@ export default function KostDetail() {
 
               <p className="mt-4 text-lg font-medium text-gray-900">
                 Rp {formatRupiah(kost.price)}
-                <span className="text-sm text-gray-500"> / 3 bulan</span>
+                <span className="text-sm text-gray-500"> / 1 bulan</span>
               </p>
 
               <div className="mt-5">

@@ -88,7 +88,7 @@ export default function KostCard({ kost }) {
         <p className="mt-4 text-lg font-medium text-[#8B4513]">
           Rp {kost.price.toLocaleString("id-ID")}
           <span className="text-sm font-normal text-[#6B4423]">
-            {" "} / 3 bulan
+            {" "} / 1 bulan
           </span>
         </p>
 
