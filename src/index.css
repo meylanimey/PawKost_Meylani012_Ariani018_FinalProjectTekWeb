@@ -1,11 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-
 :root {
   --radius: 0.625rem;
 }
-
 
 /* =========================
    BASE STYLES
@@ -17,38 +15,31 @@
     @apply border-gray-200;
   }
 
-
   body {
     @apply min-h-screen bg-gray-50 text-gray-900 antialiased;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont,
-      "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Ubuntu, "Helvetica Neue", sans-serif;
   }
-
 
   h1 {
     @apply text-4xl font-bold tracking-tight;
   }
 
-
   h2 {
     @apply text-3xl font-semibold tracking-tight;
   }
-
 
   h3 {
     @apply text-2xl font-semibold;
   }
 
-
   p {
     @apply leading-relaxed text-gray-700;
   }
 
-
   a {
     @apply text-indigo-600 hover:text-indigo-700 font-medium;
   }
-
 
   button {
     @apply rounded-lg px-4 py-2 font-medium transition
@@ -56,7 +47,6 @@
            hover:bg-[#E6D5BC] active:bg-[#D4C1A9];
   }
 }
-
 
 /* =========================
    ANIMATIONS
@@ -72,11 +62,9 @@
   }
 }
 
-
 .animate-fade-in {
   animation: fade-in 0.5s ease-out;
 }
-
 
 /* =========================
    DARK MODE (MANUAL)
@@ -86,18 +74,16 @@
   @apply bg-gray-950 text-gray-100;
 }
 
-
 .dark p {
   @apply text-gray-300;
 }
-
 
 .dark a {
   @apply text-indigo-400 hover:text-indigo-300;
 }
 
-
 .dark *,
 .dark ::before,
 .dark ::after {
   @apply border-gray-800;
+}
