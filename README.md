@@ -1,8 +1,8 @@
-<<<<<<< Updated upstream
-
-#Bagian Penjelasan Fitur Admin
+# CHECKPOINT 1
+# Bagian Penjelasan Fitur Admin
 Sisi Admin pada aplikasi ini berfungsi untuk mengelola data kost, mulai dari menambah data baru, mengedit data yang sudah ada, hingga menghapus data. Halaman Admin dirancang dengan antarmuka yang sederhana, responsif, dan terstruktur menggunakan Tailwind CSS serta komponen UI seperti Button dan Badge.
 Struktur utama fitur Admin terdiri dari:
+```
 src/
  ├─ components/
  │   └─ admin/
@@ -66,8 +66,9 @@ navigate("/dashboard", {
 });
 
 Bagian ini memungkinkan admin untuk langsung meninjau kost yang sedang diminati oleh user nya.
-=======
-Bagian Penjelasan Fitur User
+
+
+# Bagian Penjelasan Fitur User
 
 Sisi **User** pada aplikasi **PAW KOST** berfungsi sebagai antarmuka utama bagi pengguna untuk **melihat katalog kost**, **mengetahui detail kost**, serta **melakukan interaksi awal** seperti melihat detail dan menyatakan minat sewa.
 Pada **Checkpoint 1**, User Side difokuskan pada **UI statis**, **dummy data**, dan **event handling dasar**, tanpa integrasi backend.
@@ -95,7 +96,7 @@ src/
 
 ---
 
-## 1) Home.jsx
+1) Home.jsx
 
 `Home.jsx` merupakan **halaman utama User** yang menampilkan **katalog kost**.
 
@@ -113,9 +114,7 @@ Alur kerja:
 
 Dengan pendekatan ini, Home.jsx berperan sebagai **container page** yang mengatur data dan layout, sementara detail tampilan diserahkan ke komponen atomic.
 
----
-
-## 2) KostCard.jsx
+2) KostCard.jsx
 
 `KostCard.jsx` adalah **komponen atomic** yang digunakan untuk menampilkan **satu data kost** dalam katalog.
 
@@ -140,9 +139,7 @@ console.log("Sewa kost:", kost.id, kost.name);
 
 KostCard dibuat reusable sehingga dapat digunakan kembali tanpa mengubah struktur utama halaman.
 
----
-
-## 3) KostDetail.jsx
+3) KostDetail.jsx
 
 `KostDetail.jsx` adalah halaman untuk menampilkan **informasi lengkap** dari satu kost.
 
@@ -174,7 +171,7 @@ Hal ini memastikan UI tetap aman dan tidak error.
 
 ---
 
-## 4) Navbar.jsx
+4) Navbar.jsx
 
 `Navbar.jsx` berfungsi sebagai **navigasi utama** pada sisi User.
 
@@ -192,7 +189,7 @@ Navbar diletakkan di **layout utama** sehingga muncul di semua halaman User.
 
 ---
 
-## 5) Footer.jsx
+5) Footer.jsx
 
 `Footer.jsx` menampilkan informasi tambahan di bagian bawah halaman.
 
@@ -204,9 +201,7 @@ Isi footer:
 
 Footer berfungsi sebagai pelengkap UI agar tampilan aplikasi terlihat **lebih profesional dan lengkap**.
 
----
-
-## 6) kosts.js (Dummy Data)
+6) kosts.js (Dummy Data)
 
 File `kosts.js` berisi **data dummy** berupa array objek kost.
 
@@ -228,9 +223,7 @@ Isi data meliputi:
 
 Penggunaan dummy data ini sesuai dengan ketentuan **Checkpoint 1**, yaitu memastikan UI dapat berjalan tanpa backend.
 
----
-
-## 7) Routing User
+7) Routing User
 
 Routing User diatur menggunakan **React Router** pada `App.jsx`.
 
@@ -241,9 +234,7 @@ Rute yang tersedia:
 
 Routing ini memungkinkan navigasi antar halaman tanpa reload.
 
----
-
-## 8) Kesesuaian dengan Checkpoint 1
+8) Kesesuaian dengan Checkpoint 1
 
 User Side pada aplikasi ini telah memenuhi seluruh kriteria **Checkpoint 1**, yaitu:
 
@@ -255,4 +246,269 @@ User Side pada aplikasi ini telah memenuhi seluruh kriteria **Checkpoint 1**, ya
 * Routing dasar
 * Tampilan berhasil muncul di browser
 
->>>>>>> Stashed changes
+
+
+# CHECKPOINT 2
+# Bagian Penjelasan Fitur Admin
+Fitur Admin – PAWKOST
+Bagian Admin pada aplikasi PAWKOST digunakan untuk melakukan manajemen data kost. Halaman admin dipisahkan dari halaman publik dan diakses melalui route khusus menggunakan React Router DOM.
+
+1) Admin Routes (Client-Side Routing)
+Halaman admin diatur menggunakan nested routes pada React Router sebagai berikut:
+/admin
+/admin/add
+/admin/edit/:id
+Penjelasan:
+/admin digunakan untuk menampilkan Dashboard Admin.
+/admin/add digunakan untuk menambahkan data kost baru.
+/admin/edit/:id digunakan untuk mengedit data kost berdasarkan ID tertentu.
+Pemisahan ini bertujuan agar halaman admin tidak bercampur dengan halaman publik.
+
+2) AdminLayout
+
+File: src/components/admin/AdminLayout.jsx
+
+AdminLayout berfungsi sebagai layout utama untuk seluruh halaman admin. Komponen ini berisi:
+
+Sidebar navigasi (Dashboard, Tambah Kost, Keluar)
+
+3) Header admin
+
+Area konten utama yang ditampilkan menggunakan <Outlet />
+
+Dengan AdminLayout, seluruh halaman admin memiliki tampilan yang konsisten.
+
+4) Dashboard Admin
+
+File: src/pages/admin/Dashboard.jsx
+
+Dashboard Admin digunakan untuk mengelola seluruh data kost.
+
+Fitur yang tersedia pada Dashboard Admin:
+
+Menampilkan daftar kost dalam bentuk tabel
+
+Fitur pencarian data kost
+
+Filter data berdasarkan tipe kost
+
+Ringkasan data:
+
+Total kost
+
+Kost tersedia
+
+Kost tidak tersedia
+
+Tombol navigasi ke halaman Tambah Kost
+
+5) Tabel Data Kost
+
+File: src/components/admin/DataTable.jsx
+
+Tabel digunakan untuk menampilkan data kost secara terstruktur, meliputi:
+
+Foto kost
+
+Nama kost
+
+Tipe kost
+
+Status kost
+
+Harga
+
+Aksi (Edit dan Hapus)
+
+Aksi pada tabel:
+
+Edit: Mengarahkan admin ke halaman edit data kost berdasarkan ID.
+
+Hapus: Menampilkan dialog konfirmasi sebelum data kost dihapus.
+
+Tabel ini menggunakan komponen Shadcn/UI Table.
+
+6) Tambah Kost
+
+File: src/pages/admin/AddKost.jsx
+
+Halaman Tambah Kost digunakan untuk menambahkan data kost baru.
+
+Fitur pada halaman ini:
+
+Form input data kost:
+
+Nama kost
+
+Tipe kost
+
+Harga per bulan
+
+Alamat
+
+Deskripsi
+
+Fasilitas
+
+URL gambar
+
+Validasi input agar seluruh data wajib diisi
+
+Preview harga dan gambar
+
+Tombol Simpan dan Batal
+
+Data yang berhasil ditambahkan akan langsung muncul pada Dashboard Admin.
+
+Edit Kost (Dynamic Routing)
+
+File: src/pages/admin/EditKost.jsx
+
+Halaman Edit Kost menggunakan dynamic routing dengan parameter ID:
+
+/admin/edit/:id
+
+
+Fitur yang tersedia:
+
+Mengambil parameter ID dari URL menggunakan useParams
+
+Menampilkan data kost lama ke dalam form (prefill)
+
+Mengedit seluruh data kost
+
+Mengubah status kost (Tersedia atau Tidak Tersedia)
+
+Menambah dan menghapus fasilitas kost
+
+7) State Management
+
+Data kost disimpan di App.jsx menggunakan useState
+
+Data dibagikan ke halaman admin melalui props
+
+Proses tambah, edit, dan hapus data dikelola melalui fungsi:
+
+handleAdd
+
+handleEdit
+
+handleDelete
+
+Pendekatan ini sesuai untuk aplikasi React skala kecil dan memenuhi kebutuhan tugas.
+
+# Bagian Penjelasan Fitur User (Aplikasi)
+1. Deskripsi Umum (User Side)
+PAWKOST merupakan sistem berbasis web yang digunakan untuk menampilkan dan menelusuri data kost secara terstruktur dan mudah dipahami oleh pengguna. Sistem ini memungkinkan pengguna untuk menemukan kost berdasarkan lokasi, harga, jenis kost, serta fasilitas yang tersedia tanpa perlu melakukan pencarian manual.
+Data yang digunakan bersifat statis (dummy data) namun disusun menyerupai kondisi nyata di lapangan. Oleh karena itu, sistem ini dapat dimanfaatkan sebagai:
+•	Media pembelajaran React
+•	Katalog kost berbasis frontend
+•	Dasar pengembangan sistem berskala lebih lanjut
+PAWKOST difokuskan pada sisi pengguna (user), yaitu bagaimana pengguna berinteraksi dengan tampilan, menelusuri data kost, melihat detail informasi, serta berpindah halaman dengan navigasi yang jelas dan konsisten.
+
+2. Tujuan Pembuatan (User Side)
+Tujuan utama pembuatan PAWKOST adalah memberikan kemudahan bagi pengguna dalam menemukan kost yang sesuai dengan kebutuhan mereka. Sistem ini dirancang agar pengguna dapat memperoleh informasi kost secara cepat, akurat, dan terstruktur.
+Selain itu, PAWKOST juga bertujuan untuk melatih penerapan React dalam pengelolaan data dan tampilan. Melalui sistem ini, konsep pencarian, filter data, serta navigasi halaman dapat diterapkan secara langsung pada sisi pengguna.
+
+3. Cara Kerja Sistem (User Side)
+Cara kerja PAWKOST pada sisi pengguna dimulai dari pemuatan data kost yang tersedia di dalam sistem. Data tersebut kemudian ditampilkan secara visual agar mudah dipahami dan ditelusuri oleh pengguna.
+Alur kerja sistem secara umum adalah sebagai berikut:
+1.	Data kost dimuat dari file Kosts.js
+2.	Data ditampilkan pada halaman Home dalam bentuk kartu
+3.	Pengguna dapat:
+o	Melakukan pencarian berdasarkan kata kunci
+o	Memfilter kost berdasarkan jenis, lokasi, dan harga
+4.	Data hasil pencarian dan filter ditampilkan secara dinamis
+5.	Pengguna dapat membuka halaman detail kost
+6.	Pada halaman detail, pengguna dapat:
+o	Melihat informasi dan fasilitas secara lengkap
+o	Menghubungi pemilik kost
+o	Melakukan simulasi pemesanan
+Seluruh proses tersebut berjalan di sisi frontend tanpa melibatkan backend, sehingga fokus utama berada pada pengalaman pengguna dalam menelusuri sistem.
+
+4. Struktur Data Kost (User Side)
+Setiap data kost direpresentasikan dalam bentuk object JavaScript yang memiliki struktur terstandarisasi. Struktur ini digunakan agar data mudah dikelola dan ditampilkan secara konsisten di seluruh halaman.
+{
+  id: string,
+  name: string,
+  type: string,
+  price: number,
+  location: string,
+  facilities: string[],
+  image: string,
+  description: string
+}
+Keterangan:
+•	id berfungsi sebagai identitas unik setiap kost
+•	name menyimpan nama kost
+•	type menunjukkan jenis kost
+•	price menyimpan harga sewa per bulan
+•	location berisi alamat lengkap kost
+•	facilities menampilkan daftar fasilitas
+•	image menyimpan URL gambar kost
+•	description berisi deskripsi singkat
+Struktur ini memudahkan sistem dalam menampilkan data secara dinamis, terutama pada halaman Home dan halaman detail kost.
+
+5. Penjelasan Folder dan File (User Side)
+Struktur folder dan file disusun untuk memisahkan data, komponen tampilan, dan halaman utama agar sistem mudah dipahami dan dikembangkan.
+5.1 Folder data
+Kosts.js
+File ini berisi seluruh data kost yang digunakan oleh sistem. File ini berperan sebagai sumber data utama sehingga semua halaman dan komponen mengambil data dari satu tempat yang sama, menjaga konsistensi informasi yang ditampilkan kepada pengguna.
+
+5.2 Folder components/public
+Folder ini berisi komponen yang digunakan secara berulang pada berbagai halaman sisi pengguna.
+Navbar.jsx
+Komponen ini digunakan untuk menampilkan navigasi utama dan mengatur perpindahan halaman. Navbar membantu pengguna berpindah antar halaman dengan mudah tanpa kehilangan konteks.
+Footer.jsx
+Footer menampilkan informasi umum serta tautan ke halaman tambahan. Komponen ini juga membantu menjaga konsistensi tampilan di seluruh halaman.
+HeroSearch.jsx
+Komponen ini menjadi bagian utama pada halaman Home. HeroSearch menampilkan judul sistem dan kolom pencarian sebagai titik awal interaksi pengguna.
+SearchBar.jsx
+SearchBar bertugas mengelola input pencarian dan filter. Komponen ini memungkinkan pengguna menyaring data kost secara langsung berdasarkan kebutuhan.
+KostCard.jsx
+KostCard menampilkan ringkasan informasi kost dalam bentuk kartu. Komponen ini memudahkan pengguna membandingkan beberapa kost secara cepat.
+KostSection.jsx
+Komponen ini digunakan untuk mengelompokkan data kost ke dalam beberapa bagian. Dengan pengelompokan ini, tampilan menjadi lebih terstruktur.
+KostCarouselRow.jsx
+KostCarouselRow menampilkan daftar kost secara horizontal. Komponen ini digunakan untuk memberikan variasi tampilan dan meningkatkan estetika antarmuka.
+EmptyKost.jsx
+Komponen ini ditampilkan ketika data hasil pencarian tidak ditemukan. EmptyKost memberikan umpan balik yang jelas kepada pengguna.
+BookingKostModal.jsx
+Komponen ini digunakan untuk simulasi pemesanan kost. Pengguna dapat melihat format pemesanan sebelum menghubungi pemilik kost.
+ContactKostModal.jsx
+ContactKostModal menyediakan pesan siap kirim untuk menghubungi pemilik kost. Komponen ini mempermudah interaksi pengguna tanpa harus mengetik pesan dari awal.
+ContactForm.jsx
+ContactForm digunakan pada halaman kontak untuk menampung pesan dari pengguna. Komponen ini melengkapi fitur komunikasi dalam sistem.
+
+5.3 Folder pages/public
+Folder ini berisi halaman utama yang diakses oleh pengguna.
+Home.jsx
+Halaman Home menampilkan seluruh data kost dan mengelola pencarian serta filter. Halaman ini menjadi pusat interaksi utama pengguna.
+KostDetail.jsx
+Halaman ini menampilkan detail kost berdasarkan ID yang dipilih. Informasi yang ditampilkan bersifat lengkap dan spesifik untuk satu kost.
+Kontak.jsx
+Halaman Kontak menampilkan informasi komunikasi dan form kontak. Halaman ini memudahkan pengguna untuk menghubungi pihak terkait.
+Bantuan.jsx
+Halaman Bantuan berisi panduan penggunaan sistem. Halaman ini membantu pengguna memahami cara menggunakan fitur yang tersedia.
+Privasi.jsx
+Halaman ini menampilkan kebijakan privasi. Informasi ini penting untuk memberikan transparansi kepada pengguna.
+Syarat.jsx
+Halaman Syarat menampilkan syarat dan ketentuan penggunaan sistem. Halaman ini berfungsi sebagai pedoman penggunaan bagi pengguna.
+
+6. Routing dan Navigasi (User Side)
+Routing dan navigasi diatur menggunakan React Router DOM untuk mendukung perpindahan halaman tanpa reload. Pendekatan ini meningkatkan kenyamanan pengguna saat berpindah antar halaman.
+Rute utama yang digunakan meliputi:
+•	/ untuk Home
+•	/kost/:id untuk detail kost secara dinamis
+•	/kontak untuk halaman kontak
+•	/bantuan untuk halaman bantuan
+•	/privasi dan /syarat untuk informasi tambahan
+Penerapan routing ini mendukung navigasi yang rapi dan konsisten, sejalan dengan kebutuhan navigasi dan estetika antarmuka pada sisi pengguna.
+
+7. Teknologi yang Digunakan
+Sistem ini dibangun menggunakan teknologi frontend modern. Teknologi tersebut dipilih agar pengelolaan data dan tampilan dapat berjalan secara optimal.
+Teknologi yang digunakan meliputi:
+•	React
+•	React Router DOM
+•	JavaScript ES6
+•	Tailwind CSS
