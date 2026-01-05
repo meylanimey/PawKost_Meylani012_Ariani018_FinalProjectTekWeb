@@ -29,16 +29,9 @@ export default function EmptyKost({
         🏠
       </div>
 
+      <h3 className="text-lg md:text-xl font-bold text-[#6B4423]">{title}</h3>
 
-      <h3 className="text-lg md:text-xl font-bold text-[#6B4423]">
-        {title}
-      </h3>
-
-
-      <p className="mt-2 text-sm text-[#9C7A4F] max-w-md px-4">
-        {description}
-      </p>
-
+      <p className="mt-2 text-sm text-[#9C7A4F] max-w-md px-4">{description}</p>
 
       {onReset && (
         <button

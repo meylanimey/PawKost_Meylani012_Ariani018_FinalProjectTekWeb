@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 
+
 export default function KostCarouselRow({
   items = [],
   renderItem,
@@ -9,18 +10,22 @@ export default function KostCarouselRow({
   const rowRef = useRef(null);
   const [mounted, setMounted] = useState(false);
 
+
   useMemo(() => {
     const t = setTimeout(() => setMounted(true), 40);
     return () => clearTimeout(t);
   }, []);
 
+
   const scrollLeft = () => {
     rowRef.current?.scrollBy({ left: -scrollStep, behavior: "smooth" });
   };
 
+
   const scrollRight = () => {
     rowRef.current?.scrollBy({ left: scrollStep, behavior: "smooth" });
   };
+
 
   return (
     <div className={`relative ${className}`}>
@@ -42,6 +47,7 @@ export default function KostCarouselRow({
         <ChevronLeft />
       </button>
 
+
       <div
         ref={rowRef}
         className={[
@@ -60,6 +66,7 @@ export default function KostCarouselRow({
           </div>
         ))}
       </div>
+
 
       {/* RIGHT ARROW */}
       <button
@@ -82,6 +89,7 @@ export default function KostCarouselRow({
   );
 }
 
+
 function ChevronLeft() {
   return (
     <svg
@@ -101,6 +109,7 @@ function ChevronLeft() {
   );
 }
 
+
 function ChevronRight() {
   return (
     <svg
@@ -119,3 +128,8 @@ function ChevronRight() {
     </svg>
   );
 }
+
+
+
+
+

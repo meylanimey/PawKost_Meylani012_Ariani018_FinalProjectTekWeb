@@ -35,7 +35,6 @@ export default function BookingKostModal({
   const [duration, setDuration] = useState("3"); // bulan
   const [note, setNote] = useState("");
 
-  // Animasi mount/unmount halus
   useEffect(() => {
     if (open) {
       setMounted(true);
@@ -59,7 +58,6 @@ export default function BookingKostModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  // Close: click outside panel
   const onBackdrop = (e) => {
     if (!panelRef.current) return;
     if (!panelRef.current.contains(e.target)) onClose?.();
@@ -109,7 +107,7 @@ export default function BookingKostModal({
   return (
     <div
       className="
-        fixed inset-0 z-999
+        fixed inset-0 z-[999]
         bg-black/40
         flex items-center justify-center
         p-4

@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-<<<<<<< Updated upstream
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-=======
 import {
   ArrowLeft,
   MapPin,
@@ -11,7 +7,6 @@ import {
   MessageCircle,
   ClipboardCheck,
 } from "lucide-react";
->>>>>>> Stashed changes
 
 import KostCard from "@/components/public/KostCard";
 import ContactKostModal from "@/components/public/ContactKostModal";
@@ -22,16 +17,10 @@ function formatRupiah(num) {
   return Number(num || 0).toLocaleString("id-ID");
 }
 
-export default function KostDetail({ kosts = [] }) {
+export default function KostDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-<<<<<<< Updated upstream
-  const kost = useMemo(
-    () => kosts.find((k) => String(k.id) === String(id)),
-    [kosts, id]
-  );
-=======
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 40);
@@ -49,7 +38,6 @@ export default function KostDetail({ kosts = [] }) {
 
   const [openContact, setOpenContact] = useState(false); // untuk "Tanya via WA" (template pilihan)
   const [openBooking, setOpenBooking] = useState(false); // untuk "Ajukan Sewa" (form + kalender)
->>>>>>> Stashed changes
 
   if (!kost) {
     return (
@@ -80,26 +68,6 @@ export default function KostDetail({ kosts = [] }) {
     );
   }
 
-<<<<<<< Updated upstream
-  const handleCheckout = () => {
-    console.log("[SEWA - DETAIL] klik sewa:", kost.id, kost.name);
-
-    const key = "pending_sewa";
-    const existing = JSON.parse(localStorage.getItem(key) || "[]");
-    const already = existing.some((k) => String(k.id) === String(kost.id));
-
-    if (!already) {
-      localStorage.setItem(key, JSON.stringify([kost, ...existing]));
-      console.log("[SEWA] disimpan ke localStorage");
-    } else {
-      console.log("[SEWA] sudah ada di pending");
-    }
-
-    alert("Permintaan sewa terkirim. Admin akan memproses.");
-  };
-
-=======
->>>>>>> Stashed changes
   return (
     <main className="min-h-screen bg-white">
       <div
@@ -123,19 +91,6 @@ export default function KostDetail({ kosts = [] }) {
           Kembali
         </button>
 
-<<<<<<< Updated upstream
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <img
-          src={kost.image}
-          alt={kost.name}
-          className="h-80 w-full object-cover"
-        />
-
-        <div className="space-y-4 p-6">
-          <div className="flex flex-wrap items-center gap-2">
-            {kost.type && <Badge variant="secondary">{kost.type}</Badge>}
-            <Badge variant="outline">{kost.id}</Badge>
-=======
         <div className="grid lg:grid-cols-2 gap-8">
           <div className="rounded-3xl overflow-hidden border border-gray-200 shadow-sm">
             <img
@@ -143,7 +98,6 @@ export default function KostDetail({ kosts = [] }) {
               alt={kost.name}
               className="w-full h-[360px] object-cover"
             />
->>>>>>> Stashed changes
           </div>
 
           {/* INFO */}

@@ -27,6 +27,10 @@ const CAMPUS_OPTIONS = [
   "TELKOM",
 ];
 
+/**
+ * Price ranges: bebas string, nanti di filter logic kamu tinggal mapping.
+ * Untuk sementara dikirim sebagai string saja (aman dan tidak error).
+ */
 const PRICE_OPTIONS = [
   "> Rp 250.000 – Rp 500.000",
   "> Rp 500.000 – Rp 1.000.000",
@@ -44,6 +48,7 @@ export default function SearchBar({
 }) {
   const [open, setOpen] = useState(false);
 
+  // filter states (array of string)
   const [types, setTypes] = useState([]);
   const [regions, setRegions] = useState([]);
   const [campuses, setCampuses] = useState([]);
@@ -52,6 +57,7 @@ export default function SearchBar({
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
 
+  // close jika klik di luar
   useEffect(() => {
     const handler = (e) => {
       if (!wrapperRef.current) return;
@@ -61,6 +67,7 @@ export default function SearchBar({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // hitung jumlah filter aktif untuk badge kecil
   const activeCount = useMemo(() => {
     return types.length + regions.length + campuses.length + priceRanges.length;
   }, [types, regions, campuses, priceRanges]);
@@ -238,6 +245,7 @@ function FilterSection({ title, options, selected, setSelected }) {
   );
 }
 
+/* Icons */
 function SearchIcon({ className = "" }) {
   return (
     <svg

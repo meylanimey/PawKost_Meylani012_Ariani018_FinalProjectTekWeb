@@ -10,18 +10,6 @@ import {
 
 export default function Footer() {
   return (
-<<<<<<< Updated upstream
-    <footer id="kontak" className="mt-20 border-t border-pink-200 bg-white">
-      <div className="mx-auto grid max-w-7xl gap-8 px-6 py-10 md:grid-cols-3">
-        {/* Brand */}
-        <div>
-          <h2 className="text-lg font-bold text-slate-900">PAW KOST</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Platform pencarian kost yang memudahkan kamu menemukan tempat tinggal
-            nyaman dan terjangkau di Yogyakarta.
-          </p>
-        </div>
-=======
     <footer className="bg-[#C4AB97] text-white">
       <div className="max-w-7xl mx-auto px-5 py-14">
         <div className="grid gap-10 md:grid-cols-4">
@@ -40,7 +28,6 @@ export default function Footer() {
                 </span>
               </div>
             </div>
->>>>>>> Stashed changes
 
             <p className="mt-4 text-sm leading-relaxed text-white/90">
               PAWKOST membantu kamu menemukan kost sesuai kebutuhan, mulai dari

@@ -90,7 +90,7 @@ export default function ContactKostModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-999">
+    <div className="fixed inset-0 z-[999]">
       {/* BACKDROP */}
       <div
         className={[
@@ -158,7 +158,7 @@ export default function ContactKostModal({
               <div
                 className="
                   rounded-2xl border border-gray-200 bg-white
-                  max-h-80 overflow-auto
+                  max-h-[320px] overflow-auto
                 "
               >
                 {templates.map((t) => {

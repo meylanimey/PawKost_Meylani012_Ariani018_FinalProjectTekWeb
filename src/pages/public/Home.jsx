@@ -1,40 +1,3 @@
-<<<<<<< Updated upstream
-import { useMemo, useState } from "react";
-import KostCard from "../../components/public/KostCard";
-
-export default function Home({ kosts = [] }) {
-  const [type, setType] = useState("Semua");
-
-  const filtered = useMemo(() => {
-    if (type === "Semua") return kosts;
-    return kosts.filter((k) => k.type === type);
-  }, [kosts, type]);
-
-  return (
-    <main className="mx-auto max-w-7xl px-6 py-10">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Daftar Kamar Kost</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Menampilkan {filtered.length} kost
-          </p>
-        </div>
-
-        <select
-          value={type}
-          onChange={(e) => {
-            setType(e.target.value);
-            console.log("Filter tipe:", e.target.value);
-          }}
-          className="w-full sm:w-56 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 outline-none focus:border-slate-300"
-        >
-          <option>Semua</option>
-          <option>Putra</option>
-          <option>Putri</option>
-          <option>Pet Friendly</option>
-          <option>Campur</option>
-        </select>
-=======
 import { useEffect, useMemo, useState } from "react";
 import HeroSearch from "@/components/public/HeroSearch";
 import KostSection from "@/components/public/KostSection";
@@ -42,11 +5,9 @@ import KostCard from "@/components/public/KostCard";
 import EmptyKost from "@/components/public/EmptyKost";
 import { Kosts } from "@/data/Kosts";
 
-
 function parseRupiah(str) {
   return Number(String(str).replace(/[^\d]/g, "")) || 0;
 }
-
 
 function parsePriceRange(label) {
   if (label.includes("–")) {
@@ -59,19 +20,25 @@ function parsePriceRange(label) {
   return { min: 0, max: Infinity };
 }
 
-
 function matchQuery(k, q) {
   if (!q) return true;
   const text = q.toLowerCase();
   return (
-    String(k.name || "").toLowerCase().includes(text) ||
-    String(k.location || "").toLowerCase().includes(text) ||
-    String(k.type || "").toLowerCase().includes(text) ||
-    String(k.description || "").toLowerCase().includes(text) ||
+    String(k.name || "")
+      .toLowerCase()
+      .includes(text) ||
+    String(k.location || "")
+      .toLowerCase()
+      .includes(text) ||
+    String(k.type || "")
+      .toLowerCase()
+      .includes(text) ||
+    String(k.description || "")
+      .toLowerCase()
+      .includes(text) ||
     (k.facilities || []).some((f) => String(f).toLowerCase().includes(text))
   );
 }
-
 
 function applyFilters(kosts, filters) {
   const query = (filters?.query || "").trim();
@@ -79,25 +46,17 @@ function applyFilters(kosts, filters) {
   const regions = filters?.regions || [];
   const priceRanges = filters?.priceRanges || [];
 
-
   return kosts.filter((k) => {
-    // search query
     if (!matchQuery(k, query)) return false;
 
-
-    // type
     if (types.length && !types.includes(k.type)) return false;
 
-
-    // region -> check in location string
     if (regions.length) {
       const loc = String(k.location || "").toLowerCase();
       const ok = regions.some((r) => loc.includes(String(r).toLowerCase()));
       if (!ok) return false;
     }
 
-
-    // priceRanges
     if (priceRanges.length) {
       const price = Number(k.price) || 0;
       const ok = priceRanges.some((label) => {
@@ -107,19 +66,13 @@ function applyFilters(kosts, filters) {
       if (!ok) return false;
     }
 
-
     return true;
   });
 }
 
-
-// ===== Page =====
 export default function Home() {
-  // dropdown filter section "Pilihan Kost"
   const [typeFilter, setTypeFilter] = useState("Semua");
 
-
-  // payload dari SearchBar
   const [filters, setFilters] = useState({
     query: "",
     types: [],
@@ -128,37 +81,27 @@ export default function Home() {
     priceRanges: [],
   });
 
-
-  // animasi load page
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 40);
     return () => clearTimeout(t);
   }, []);
 
-
-  // gabungkan dropdown typeFilter dengan filters.types
   const mergedFilters = useMemo(() => {
     const dropdownTypes = typeFilter === "Semua" ? [] : [typeFilter];
     const types = filters.types?.length ? filters.types : dropdownTypes;
     return { ...filters, types };
   }, [filters, typeFilter]);
 
-
-  // hasil final (semua section pakai ini sebagai base)
   const filteredAll = useMemo(() => {
     return applyFilters(Kosts, mergedFilters);
   }, [mergedFilters]);
 
-
-  // ===== Section data (dibangun dari filteredAll) =====
   const pilihanKost = useMemo(() => filteredAll, [filteredAll]);
-
 
   const rekomendasiKost = useMemo(() => {
     return filteredAll.slice(0, 10);
   }, [filteredAll]);
-
 
   const areaKampusKost = useMemo(() => {
     const keywords = [
@@ -175,12 +118,10 @@ export default function Home() {
     return filtered.length ? filtered : filteredAll.slice(0, 10);
   }, [filteredAll]);
 
-
   const kostHemat = useMemo(() => {
     const filtered = filteredAll.filter((k) => Number(k.price) <= 2000000);
     return filtered.length ? filtered : filteredAll.slice(0, 10);
   }, [filteredAll]);
-
 
   const handleReset = () => {
     setTypeFilter("Semua");
@@ -193,9 +134,6 @@ export default function Home() {
     });
   };
 
-
-  // Jika user melakukan search/filter dan hasilnya kosong,
-  // tampilkan EmptyState untuk seluruh section
   const isSearchingOrFiltering = useMemo(() => {
     return (
       (filters.query || "").trim().length > 0 ||
@@ -207,18 +145,14 @@ export default function Home() {
     );
   }, [filters, typeFilter]);
 
-
   const showGlobalEmpty = isSearchingOrFiltering && filteredAll.length === 0;
-
 
   return (
     <main className="min-h-screen bg-white">
       {/* Hero Search */}
       <div className="bg-white">
         <HeroSearch onSearch={setFilters} />
->>>>>>> Stashed changes
       </div>
-
 
       {/* Content */}
       <div
@@ -247,7 +181,6 @@ export default function Home() {
               renderItem={(kost) => <KostCard kost={kost} />}
             />
 
-
             <KostSection
               id="rekomendasi-kost"
               title="Rekomendasi Kost"
@@ -257,7 +190,6 @@ export default function Home() {
               }
               renderItem={(kost) => <KostCard kost={kost} />}
             />
-
 
             <KostSection
               id="kost-kampus"
@@ -269,7 +201,6 @@ export default function Home() {
               renderItem={(kost) => <KostCard kost={kost} />}
             />
 
-
             <KostSection
               id="kost-hemat"
               title="Kost Hemat"
@@ -277,7 +208,6 @@ export default function Home() {
               items={kostHemat.length ? kostHemat : Kosts.slice(0, 10)}
               renderItem={(kost) => <KostCard kost={kost} />}
             />
-
 
             {/* ===== Tentang PAWKOST (baru) ===== */}
             <AboutPawkost />
@@ -287,24 +217,14 @@ export default function Home() {
     </main>
   );
 }
-<<<<<<< Updated upstream
-=======
 
-
-/**
- * Section "Tentang PAWKOST" (di bawah section kost)
- * - gaya mengikuti contoh gambar (judul + paragraf + bullet)
- * - ada animasi halus saat muncul & hover shadow
- */
 function AboutPawkost() {
   const [show, setShow] = useState(false);
-
 
   useEffect(() => {
     const t = setTimeout(() => setShow(true), 60);
     return () => clearTimeout(t);
   }, []);
-
 
   return (
     <section
@@ -321,7 +241,6 @@ function AboutPawkost() {
         Tentang PAWKOST
       </h2>
 
-
       <p className="mt-3 text-[#8B6F47] leading-relaxed">
         Platform pencarian kost yang membantu kamu menemukan tempat tinggal yang
         nyaman sesuai kebutuhan. Melalui tampilan yang sederhana dan fitur
@@ -330,11 +249,9 @@ function AboutPawkost() {
         pengalaman mencari kost yang lebih cepat dan menyenangkan.
       </p>
 
-
       <h3 className="mt-7 text-lg font-semibold text-[#6B4423]">
         Kenapa PAWKOST?
       </h3>
-
 
       <ul className="mt-3 space-y-2 text-[#8B6F47]">
         <li className="flex gap-2">
@@ -357,4 +274,3 @@ function AboutPawkost() {
     </section>
   );
 }
->>>>>>> Stashed changes

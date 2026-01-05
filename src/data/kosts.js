@@ -3,12 +3,10 @@ export const Kosts = [
     id: "1",
     name: "Kost Rumah Ice",
     type: "Putri",
-<<<<<<< Updated upstream
     status: "Tersedia",
     price: 800000,
     address: "Jl. Kaliurang KM 5, Sleman, Yogyakarta",
     facilities: ["AC", "WiFi", "KM Dalam", "Lemari"],
-=======
     price: 900000,
     location: "Jl. Ki Ageng Pemanahan, Banguntapan, DI Yogyakarta",
     facilities: [
@@ -29,7 +27,6 @@ export const Kosts = [
       "Dapur Bersama",
       "Kursi",
     ],
->>>>>>> Stashed changes
     image:
       "https://lh3.googleusercontent.com/gps-cs-s/AG0ilSw62pxGhxe5fgqz02uUaPGtW4NNLkYD_MhK_WtODrL9Kmldb_xKqXfHgYOoL4IUMJHxiplcKtqXNn-9QZm8iT3MgPGYD-Rhvf9rrZ9yJFhJFNpI2n4HpfJMg-4vbRcRBHQ7SyDoUirh5MA=s1360-w1360-h1020-rw",
     description: "Kost nyaman khusus putri.",
@@ -99,9 +96,7 @@ export const Kosts = [
     id: "4",
     name: "Kost Paw House",
     type: "Pet Friendly",
-<<<<<<< Updated upstream
     status: "Tersedia",
-=======
     price: 890000,
     location: "UNDIP, Jl. Prof. Sudarto, Tembalang, Jawa Tengah",
     facilities: [
@@ -134,7 +129,6 @@ export const Kosts = [
     id: "5",
     name: "Kost Putri Melati",
     type: "Putri",
->>>>>>> Stashed changes
     price: 1000000,
     location: "Jl. Gatot Subroto, Denpasar Selatan, Bali",
     facilities: [
