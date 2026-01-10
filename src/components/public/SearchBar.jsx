@@ -1,6 +1,10 @@
+// import hooks React yang dibutuhkan
 import { useEffect, useMemo, useRef, useState } from "react";
 
+// opsi filter jenis kost
 const TYPE_OPTIONS = ["Campur", "Putra", "Putri", "Pet Friendly"];
+
+// opsi filter daerah
 const REGION_OPTIONS = [
   "Yogyakarta",
   "Semarang",
@@ -12,6 +16,7 @@ const REGION_OPTIONS = [
   "Medan",
 ];
 
+// opsi filter area kampus
 const CAMPUS_OPTIONS = [
   "UAD",
   "UGM",
@@ -28,8 +33,8 @@ const CAMPUS_OPTIONS = [
 ];
 
 /**
- * Price ranges: bebas string, nanti di filter logic kamu tinggal mapping.
- * Untuk sementara dikirim sebagai string saja (aman dan tidak error).
+ * opsi rentang harga
+ * masih berupa string, nanti bisa dimapping di logic filter
  */
 const PRICE_OPTIONS = [
   "> Rp 250.000 – Rp 500.000",
@@ -40,24 +45,29 @@ const PRICE_OPTIONS = [
   "> Rp 5.000.000",
 ];
 
+// komponen SearchBar utama
 export default function SearchBar({
-  value = "",
-  onChange,
-  onSubmit,
+  value = "", // nilai input search
+  onChange, // handler perubahan input
+  onSubmit, // handler submit pencarian
   placeholder = "Masukkan nama kost/jenis kost/lokasi/harga",
 }) {
+  // state untuk buka/tutup dropdown filter
   const [open, setOpen] = useState(false);
 
-  // filter states (array of string)
+  // state filter (masing-masing berupa array string)
   const [types, setTypes] = useState([]);
   const [regions, setRegions] = useState([]);
   const [campuses, setCampuses] = useState([]);
   const [priceRanges, setPriceRanges] = useState([]);
 
+  // ref untuk wrapper (deteksi klik luar)
   const wrapperRef = useRef(null);
+
+  // ref untuk input search
   const inputRef = useRef(null);
 
-  // close jika klik di luar
+  // effect untuk menutup dropdown saat klik di luar komponen
   useEffect(() => {
     const handler = (e) => {
       if (!wrapperRef.current) return;
@@ -67,50 +77,52 @@ export default function SearchBar({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // hitung jumlah filter aktif untuk badge kecil
+  // menghitung jumlah filter aktif (untuk badge angka)
   const activeCount = useMemo(() => {
     return types.length + regions.length + campuses.length + priceRanges.length;
   }, [types, regions, campuses, priceRanges]);
 
+  // handler submit form pencarian
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // mencegah reload halaman
     onSubmit?.({
-      query: value,
+      query: value, // keyword search
       types,
       regions,
       campuses,
       priceRanges,
     });
-    setOpen(false);
+    setOpen(false); // tutup dropdown setelah submit
   };
 
   return (
+    // wrapper utama search bar
     <div ref={wrapperRef} className="relative w-full max-w-2xl mx-auto">
       <form onSubmit={handleSubmit}>
-        {/* BAR */}
+        {/* BAR SEARCH */}
         <div
           className="w-full flex items-center gap-2
                      bg-white rounded-xl border border-[#E6D5BC]
                      shadow-sm px-3 py-2"
         >
-          {/* search icon */}
+          {/* icon search */}
           <span className="text-[#9C7A4F]">
             <SearchIcon className="w-5 h-5" />
           </span>
 
-          {/* input */}
+          {/* input pencarian */}
           <input
             ref={inputRef}
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
-            onFocus={() => setOpen(true)}
+            onFocus={() => setOpen(true)} // buka dropdown saat fokus
             placeholder={placeholder}
             className="w-full bg-transparent outline-none
                        text-sm md:text-base text-[#6B4423]
                        placeholder:text-[#B59A74]"
           />
 
-          {/* filter toggle button */}
+          {/* tombol buka filter */}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -121,6 +133,8 @@ export default function SearchBar({
             aria-label="Buka filter"
           >
             <SlidersIcon className="w-5 h-5" />
+
+            {/* badge jumlah filter aktif */}
             {activeCount > 0 && (
               <span
                 className="absolute -top-2 -right-2 min-w-5 h-5
@@ -132,7 +146,7 @@ export default function SearchBar({
             )}
           </button>
 
-          {/* submit button */}
+          {/* tombol submit */}
           <button
             type="submit"
             className="shrink-0 rounded-lg px-4 py-2
@@ -145,13 +159,14 @@ export default function SearchBar({
         </div>
       </form>
 
-      {/* DROPDOWN PANEL */}
+      {/* DROPDOWN FILTER */}
       {open && (
         <div
           className="absolute left-0 right-0 mt-2 z-50
                      rounded-xl border border-[#E6D5BC]
                      bg-white shadow-lg p-4"
         >
+          {/* filter jenis kost */}
           <FilterSection
             title="Jenis Kost"
             options={TYPE_OPTIONS}
@@ -159,6 +174,7 @@ export default function SearchBar({
             setSelected={setTypes}
           />
 
+          {/* filter daerah */}
           <FilterSection
             title="Daerah"
             options={REGION_OPTIONS}
@@ -166,6 +182,7 @@ export default function SearchBar({
             setSelected={setRegions}
           />
 
+          {/* filter area kampus */}
           <FilterSection
             title="Area Kampus"
             options={CAMPUS_OPTIONS}
@@ -173,6 +190,7 @@ export default function SearchBar({
             setSelected={setCampuses}
           />
 
+          {/* filter harga */}
           <FilterSection
             title="Rentang Harga"
             options={PRICE_OPTIONS}
@@ -180,7 +198,9 @@ export default function SearchBar({
             setSelected={setPriceRanges}
           />
 
+          {/* tombol bawah */}
           <div className="mt-4 flex items-center justify-between gap-2">
+            {/* reset semua filter */}
             <button
               type="button"
               onClick={() => {
@@ -194,6 +214,7 @@ export default function SearchBar({
               Reset Filter
             </button>
 
+            {/* tutup dropdown */}
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -211,7 +232,9 @@ export default function SearchBar({
   );
 }
 
+// komponen section filter (reusable)
 function FilterSection({ title, options, selected, setSelected }) {
+  // toggle pilihan filter (tambah / hapus dari array)
   const toggle = (opt) => {
     setSelected((prev) =>
       prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
@@ -220,7 +243,10 @@ function FilterSection({ title, options, selected, setSelected }) {
 
   return (
     <div className="mb-4">
+      {/* judul filter */}
       <p className="text-sm font-bold text-[#6B4423]">{title}</p>
+
+      {/* list opsi */}
       <div className="mt-2 flex flex-wrap gap-2">
         {options.map((opt) => {
           const active = selected.includes(opt);
@@ -245,7 +271,7 @@ function FilterSection({ title, options, selected, setSelected }) {
   );
 }
 
-/* Icons */
+/* ICON SEARCH */
 function SearchIcon({ className = "" }) {
   return (
     <svg
@@ -269,6 +295,7 @@ function SearchIcon({ className = "" }) {
   );
 }
 
+/* ICON FILTER */
 function SlidersIcon({ className = "" }) {
   return (
     <svg

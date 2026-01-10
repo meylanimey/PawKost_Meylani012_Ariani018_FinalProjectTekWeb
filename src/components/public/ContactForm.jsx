@@ -16,7 +16,7 @@ export default function ContactForm({ socials }) {
   const mailBg = socials?.email?.bg || "#DBEAFE";
 
   const templateMessage = useMemo(() => {
-    const lines = [
+    return [
       `Halo PAWKOST!`,
       ``,
       `Nama: ${name || "(isi nama kamu)"}`,
@@ -26,49 +26,41 @@ export default function ContactForm({ socials }) {
       `${message || "(tulis pesan kamu di sini)"}`,
       ``,
       `Terima kasih`,
-    ];
-    return lines.join("\n");
+    ].join("\n");
   }, [name, topic, message]);
 
   const waLink = useMemo(() => {
     const wa = socials?.whatsapp?.number || "";
-    const txt = encodeURIComponent(templateMessage);
-    return wa ? `https://wa.me/${wa}?text=${txt}` : "#";
+    return wa
+      ? `https://wa.me/${wa}?text=${encodeURIComponent(templateMessage)}`
+      : "#";
   }, [socials, templateMessage]);
 
   const mailLink = useMemo(() => {
     const email = socials?.email?.address || "";
-    const subject = encodeURIComponent(
-      `[PAWKOST] ${topic} — ${name || "Anonim"}`
-    );
-    const body = encodeURIComponent(templateMessage);
-    return email ? `mailto:${email}?subject=${subject}&body=${body}` : "#";
+    return email
+      ? `mailto:${email}?subject=${encodeURIComponent(
+          `[PAWKOST] ${topic} — ${name || "Anonim"}`
+        )}&body=${encodeURIComponent(templateMessage)}`
+      : "#";
   }, [socials, topic, name, templateMessage]);
 
   const igLink = useMemo(() => socials?.instagram?.url || "#", [socials]);
 
   const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(templateMessage);
-      alert("Pesan berhasil disalin ✅");
-    } catch {
-      alert("Gagal menyalin pesan.");
-    }
+    await navigator.clipboard.writeText(templateMessage);
+    alert("Pesan berhasil disalin ✅");
   };
 
   return (
-    <div
-      className="
-        rounded-2xl border border-gray-200 bg-white
-        shadow-sm p-6
-        transition-all duration-300
-        hover:shadow-md
-      "
-    >
-      <h3 className="text-xl font-bold text-gray-900">
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      {/* Judul */}
+      <h3 className="text-xl font-bold text-[#5C4033]">
         Kirim Pesan ke PAWKOST
       </h3>
-      <p className="text-sm text-gray-600 mt-1">
+
+      {/* Deskripsi */}
+      <p className="text-sm text-[#8B6F47] mt-1">
         Isi form, lalu pilih channel (WhatsApp / Email / Instagram).
       </p>
 
@@ -82,9 +74,8 @@ export default function ContactForm({ socials }) {
               className="
                 w-full rounded-xl border border-gray-200 bg-white
                 px-4 py-2.5 outline-none
-                text-gray-900 placeholder:text-gray-400
-                focus:ring-2 focus:ring-gray-200 focus:border-gray-300
-                transition
+                text-[#8B6F47] placeholder:text-[#B59B84]
+                focus:ring-2 focus:ring-[#E7D8C9]
               "
             />
           </Field>
@@ -96,9 +87,8 @@ export default function ContactForm({ socials }) {
               className="
                 w-full rounded-xl border border-gray-200 bg-white
                 px-4 py-2.5 outline-none
-                text-gray-900
-                focus:ring-2 focus:ring-gray-200 focus:border-gray-300
-                transition
+                text-[#8B6F47]
+                focus:ring-2 focus:ring-[#E7D8C9]
               "
             >
               <option>Kerja Sama</option>
@@ -119,28 +109,25 @@ export default function ContactForm({ socials }) {
             className="
               w-full rounded-xl border border-gray-200 bg-white
               px-4 py-3 outline-none resize-none
-              text-gray-900 placeholder:text-gray-400
-              focus:ring-2 focus:ring-gray-200 focus:border-gray-300
-              transition
+              text-[#8B6F47] placeholder:text-[#B59B84]
+              focus:ring-2 focus:ring-[#E7D8C9]
             "
           />
         </Field>
 
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-bold text-gray-900">Preview Pesan</p>
+        {/* Preview */}
+        <div className="rounded-2xl border border-gray-200 bg-[#FFF7ED] p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold text-[#5C4033]">Preview Pesan</p>
 
             <button
               type="button"
               onClick={copyToClipboard}
               className="
-                inline-flex items-center gap-2 text-xs font-bold
+                inline-flex items-center gap-2
+                text-xs font-bold text-[#5C4033]
                 px-3 py-1.5 rounded-full
-                bg-white border border-gray-200
-                text-gray-800
-                transition-all duration-200
-                hover:bg-gray-50
-                active:scale-[0.98]
+                border border-[#E7D8C9] bg-white
               "
             >
               <Copy className="w-4 h-4" />
@@ -148,28 +135,18 @@ export default function ContactForm({ socials }) {
             </button>
           </div>
 
-          <pre className="mt-3 text-xs text-gray-800 whitespace-pre-wrap leading-relaxed">
+          <pre className="mt-3 text-xs text-[#8B6F47] whitespace-pre-wrap">
             {templateMessage}
           </pre>
         </div>
 
+        {/* Tombol */}
         <div className="flex flex-wrap gap-3">
           <a
             href={waLink}
             target="_blank"
-            rel="noreferrer"
-            className="
-              inline-flex items-center justify-center gap-2
-              rounded-xl px-5 py-2.5 font-bold
-              border transition-all duration-200
-              hover:-translate-y-0.5
-              active:scale-[0.98]
-            "
-            style={{
-              borderColor: waColor,
-              backgroundColor: waBg,
-              color: "#0f172a",
-            }}
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-bold border"
+            style={{ borderColor: waColor, backgroundColor: waBg, color: "#5C4033" }}
           >
             <MessageCircle className="w-5 h-5" style={{ color: waColor }} />
             WhatsApp
@@ -177,17 +154,11 @@ export default function ContactForm({ socials }) {
 
           <a
             href={mailLink}
-            className="
-              inline-flex items-center justify-center gap-2
-              rounded-xl px-5 py-2.5 font-bold
-              border transition-all duration-200
-              hover:-translate-y-0.5
-              active:scale-[0.98]
-            "
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-bold border"
             style={{
               borderColor: mailColor,
               backgroundColor: mailBg,
-              color: "#0f172a",
+              color: "#5C4033",
             }}
           >
             <Mail className="w-5 h-5" style={{ color: mailColor }} />
@@ -197,27 +168,19 @@ export default function ContactForm({ socials }) {
           <a
             href={igLink}
             target="_blank"
-            rel="noreferrer"
-            className="
-              inline-flex items-center justify-center gap-2
-              rounded-xl px-5 py-2.5 font-bold
-              border transition-all duration-200
-              hover:-translate-y-0.5
-              active:scale-[0.98]
-            "
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-bold border"
             style={{
               borderColor: igColor,
               backgroundColor: igBg,
-              color: "#0f172a",
+              color: "#5C4033",
             }}
-            title="Buka Instagram PAWKOST, lalu paste pesan dari preview."
           >
             <Instagram className="w-5 h-5" style={{ color: igColor }} />
             Instagram
           </a>
         </div>
 
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-[#8B6F47]">
           * Untuk Instagram, link membuka profil. Kamu tinggal paste pesan dari
           preview.
         </p>
@@ -229,7 +192,7 @@ export default function ContactForm({ socials }) {
 function Field({ label, children }) {
   return (
     <label className="block">
-      <span className="text-sm font-bold text-gray-900">{label}</span>
+      <span className="text-sm font-bold text-[#5C4033]">{label}</span>
       <div className="mt-2">{children}</div>
     </label>
   );

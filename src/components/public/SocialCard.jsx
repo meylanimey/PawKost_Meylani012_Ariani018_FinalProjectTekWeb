@@ -4,7 +4,7 @@ export default function SocialCard({
   desc,
   href,
   Icon,
-  color = "#111827",
+  color = "#5C4033",
 }) {
   return (
     <a
@@ -21,28 +21,36 @@ export default function SocialCard({
       "
     >
       <div className="p-5 flex items-start gap-4">
-        <div
-          className="
-            transition-transform duration-300
-            group-hover:scale-110
-          "
-        >
-          <Icon className="w-7 h-7" style={{ color }} />
+        {/* Icon */}
+        <div className="transition-transform duration-300 group-hover:scale-110">
+          <Icon
+            className="w-7 h-7"
+            style={{ color }}
+          />
         </div>
 
+        {/* Content */}
         <div className="min-w-0">
-          <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+          {/* Judul */}
+          <h3 className="text-base font-semibold text-[#5C4033]">
+            {title}
+          </h3>
 
+          {/* Handle */}
           {handle && (
-            <p className="text-sm font-medium text-gray-500 mt-0.5">{handle}</p>
+            <p className="text-sm font-medium text-[#8B6F47] mt-0.5">
+              {handle}
+            </p>
           )}
 
+          {/* Deskripsi */}
           {desc && (
-            <p className="text-sm text-gray-600 mt-2 leading-relaxed line-clamp-2">
+            <p className="text-sm text-[#8B6F47] mt-2 leading-relaxed line-clamp-2">
               {desc}
             </p>
           )}
 
+          {/* CTA */}
           <span
             className="
               mt-3 inline-flex items-center gap-1

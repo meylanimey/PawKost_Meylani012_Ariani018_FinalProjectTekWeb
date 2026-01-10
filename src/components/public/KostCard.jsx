@@ -1,20 +1,33 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 
 export default function KostCard({ kost }) {
+  const navigate = useNavigate();
+
+
+  const goToDetail = () => {
+    navigate(`/detail/${kost.id}`);
+  };
+
+
   return (
     <div
+      onClick={goToDetail}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && goToDetail()}
       className="
-        group bg-[#FFF8ED]
+        group cursor-pointer
+        bg-[#FFF8ED]
         rounded-2xl border border-[#E6D5BC]
         shadow-sm overflow-hidden
         max-w-sm h-full
         transition-all duration-300
         hover:-translate-y-1 hover:shadow-md
+        focus:outline-none focus:ring-2 focus:ring-[#E6D5BC]
         flex flex-col
       "
     >
-      {/* IMAGE */}
       <div className="p-3">
         <div className="relative overflow-hidden rounded-xl shadow">
           <img
@@ -31,9 +44,7 @@ export default function KostCard({ kost }) {
       </div>
 
 
-      {/* CONTENT */}
       <div className="px-4 pb-4 flex flex-col flex-1">
-        {/* TITLE + TYPE */}
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-lg font-medium text-[#6B4423] leading-snug">
             {kost.name}
@@ -55,21 +66,14 @@ export default function KostCard({ kost }) {
         </div>
 
 
-        {/* LOCATION */}
-        <p className="mt-1 text-sm text-[#9C7A4F]">
-          {kost.location}
-        </p>
+        <p className="mt-1 text-sm text-[#9C7A4F]">{kost.location}</p>
 
 
-        {/* STATUS */}
-        <p className="mt-1 text-sm font-medium text-green-600">
-          Tersedia
-        </p>
+        <p className="mt-1 text-sm font-medium text-green-600">Tersedia</p>
 
 
-        {/* FACILITIES */}
         <div className="mt-3 flex flex-wrap gap-2">
-          {kost.facilities.slice(0, 5).map((f, i) => (
+          {kost.facilities?.slice(0, 5).map((f, i) => (
             <span
               key={i}
               className="
@@ -84,39 +88,38 @@ export default function KostCard({ kost }) {
         </div>
 
 
-        {/* PRICE */}
         <p className="mt-4 text-lg font-medium text-[#8B4513]">
           Rp {kost.price.toLocaleString("id-ID")}
           <span className="text-sm font-normal text-[#6B4423]">
-            {" "} / 1 bulan
+            {" "}
+            / 3 bulan
           </span>
         </p>
 
 
-        {/* BUTTON — ALWAYS BOTTOM */}
         <div className="mt-auto pt-4">
-          <Link to={`/detail/${kost.id}`}>
-            <button
-              className="
-                w-full py-2.5 rounded-lg
-                bg-[#EFE6DA] text-[#6B4423]
-                font-medium
-                border border-[#E6D5BC]
-                transition-all duration-300
-                hover:bg-[#E6D5BC]
-                active:scale-[0.98]
-              "
-            >
-              Detail
-            </button>
-          </Link>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              goToDetail();
+            }}
+            className="
+              w-full py-2.5 rounded-lg
+              bg-[#EFE6DA] text-[#6B4423]
+              font-medium
+              border border-[#E6D5BC]
+              transition-all duration-300
+              hover:bg-[#E6D5BC]
+              active:scale-[0.98]
+            "
+          >
+            Detail
+          </button>
         </div>
       </div>
     </div>
   );
 }
-
-
 
 
 
