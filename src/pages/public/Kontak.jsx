@@ -5,7 +5,8 @@ import ContactForm from "@/components/public/ContactForm";
 import {
   Instagram as InstagramIcon,
   Mail as MailIcon,
-  MessageCircle as WhatsAppIcon,
+  Phone as WhatsAppIcon,
+  Music2 as TiktokIcon,
 } from "lucide-react";
 
 const SOCIALS = {
@@ -38,6 +39,15 @@ const SOCIALS = {
     color: "#2563EB",
     bg: "#DBEAFE",
   },
+  tiktok: {
+    title: "TikTok",
+    handle: "@pawkost",
+    url: "https://www.tiktok.com/@pawkost",
+    desc: "Konten seru seputar kost dan kehidupan anak kost.",
+    Icon: TiktokIcon,
+    color: "#000000",
+    bg: "#F0F0F0",
+  },
 };
 
 export default function Kontak() {
@@ -55,7 +65,8 @@ export default function Kontak() {
       <section className="mx-auto max-w-6xl px-4 pt-10 pb-6">
         <div
           className={[
-            "relative rounded-3xl border border-gray-200 bg-white",
+            // 👉 KOTAK ISINYA CREAM
+            "relative rounded-3xl border border-gray-200 bg-[#FFF7ED]",
             "shadow-sm p-7 md:p-9",
             "transition-all duration-700 ease-out",
             mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
@@ -72,14 +83,16 @@ export default function Kontak() {
             "
           />
 
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
+          {/* BOLD → COKLAT TUA */}
+          <h1 className="text-3xl md:text-4xl font-bold text-[#5C4033]">
             Kontak PAWKOST
           </h1>
 
-          <p className="mt-2 text-gray-600 max-w-2xl">
-            Terhubung langsung dengan PAWKOST lewat sosial media resmi atau
-            kirim pesan menggunakan form di halaman ini. Kami siap bantu kamu
-            cari kost terbaik 🐾
+          {/* TEKS BIASA → COKLAT MUDA */}
+          <p className="mt-2 max-w-2xl text-[#8B6F47]">
+            Terhubung langsung dengan PAWKOST lewat sosial media resmi atau kirim
+            pesan menggunakan form di halaman ini. Kami siap bantu kamu cari kost
+            terbaik 🐾
           </p>
         </div>
       </section>
@@ -94,10 +107,13 @@ export default function Kontak() {
         >
           <div className="space-y-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              {/* BOLD → COKLAT TUA */}
+              <h2 className="text-xl font-bold text-[#5C4033]">
                 Sosial Media Resmi
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
+
+              {/* TEKS BIASA → COKLAT MUDA */}
+              <p className="text-sm text-[#8B6F47] mt-1">
                 Follow atau hubungi kami lewat platform favorit kamu.
               </p>
             </div>
@@ -117,6 +133,7 @@ export default function Kontak() {
               ))}
             </div>
           </div>
+
           <div>
             <ContactForm socials={SOCIALS} />
           </div>

@@ -68,14 +68,6 @@ navigate("/dashboard", {
 Bagian ini memungkinkan admin untuk langsung meninjau kost yang sedang diminati oleh user nya.
 
 
-Siap. Berikut **versi yang sudah dibersihkan dari tanda bintang (`*`, `**`)**, tetap rapi, formal, dan cocok untuk README.md atau laporan.
-
----
-
-Siap. Berikut **versi yang sudah dibersihkan dari tanda bintang (`*`, `**`)**, tetap rapi, formal, dan cocok untuk README.md atau laporan.
-
----
-
 # Bagian Penjelasan Fitur User
 
 Sisi User pada aplikasi PAW KOST berfungsi sebagai antarmuka utama bagi pengguna untuk melihat katalog kost, mengetahui detail kost, serta melakukan interaksi awal seperti melihat detail dan menyatakan minat sewa.
@@ -147,7 +139,6 @@ console.log("Sewa kost:", kost.id, kost.name);
 KostCard dibuat reusable sehingga dapat digunakan kembali tanpa mengubah struktur utama halaman.
 
 
-
 3) KostDetail.jsx
 
 KostDetail.jsx adalah halaman untuk menampilkan informasi lengkap dari satu kost.
@@ -177,7 +168,6 @@ Data kost tidak ditemukan
 ```
 
 Hal ini memastikan UI tetap aman dan tidak menimbulkan error.
-
 
 
 4) Navbar.jsx
@@ -257,15 +247,6 @@ User Side pada aplikasi ini telah memenuhi seluruh kriteria Checkpoint 1, yaitu:
 * Routing dasar
 * Tampilan berhasil muncul di browser
 
----
-
-Kalau kamu mau, saya juga bisa:
-
-* Menyesuaikan bahasa agar lebih singkat
-* Menyatukan penjelasan User dan Admin dalam satu README
-* Menyusun versi khusus untuk laporan PDF
-
-Tinggal beri tahu.
 
 
 # CHECKPOINT 2

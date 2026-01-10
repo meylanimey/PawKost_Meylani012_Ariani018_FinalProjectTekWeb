@@ -24,17 +24,25 @@ export default function Syarat() {
           mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
         ].join(" ")}
       >
-        {/* HEADER */}
-        <section className="space-y-3">
-          <h1 className="text-2xl md:text-3xl font-medium text-gray-900">
-            Syarat dan Ketentuan PAWKOST
-          </h1>
-          <p className="text-gray-600 leading-relaxed">
-            Dengan mengakses dan menggunakan PAWKOST, pengguna dianggap telah
-            membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang
-            berlaku.
-          </p>
-        </section>
+       {/* HEADER */}
+<section
+  className="
+    rounded-2xl
+    border border-[#E6D5BC]
+    bg-[#FFF7ED]
+    p-6
+    space-y-3
+  "
+>
+  <h1 className="text-2xl md:text-3xl font-medium text-[#6B4423]">
+    Syarat dan Ketentuan PAWKOST
+  </h1>
+  <p className="text-[#8B6F47] leading-relaxed">
+    Dengan mengakses dan menggunakan PAWKOST, pengguna dianggap telah
+    membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang
+    berlaku.
+  </p>
+</section>
 
         {/* CONTENT */}
         <section className="space-y-6">
@@ -69,8 +77,9 @@ export default function Syarat() {
           />
         </section>
 
-        <section className="rounded-2xl border border-gray-200 bg-gray-50 p-6">
-          <p className="text-sm text-gray-600 leading-relaxed">
+        {/* FOOT NOTE */}
+        <section className="rounded-2xl border border-[#E6D5BC] bg-white p-6">
+          <p className="text-sm text-[#8B6F47] leading-relaxed">
             Jika kamu memiliki pertanyaan terkait Syarat & Ketentuan ini, kamu
             bisa menghubungi tim PAWKOST melalui halaman Kontak.
           </p>
@@ -82,12 +91,37 @@ export default function Syarat() {
 
 function TermItem({ icon: Icon, title, content }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 hover:shadow-sm transition">
-      <div className="flex items-start gap-3">
-        <Icon className="w-5 h-5 text-gray-600 mt-0.5" />
-        <div>
-          <h3 className="font-medium text-gray-900">{title}</h3>
-          <p className="mt-1 text-sm text-gray-600 leading-relaxed">
+    <div
+      className="
+        rounded-2xl
+        border border-[#E6D5BC]
+        bg-white
+        p-5
+        hover:shadow-[0_6px_18px_rgba(107,68,35,0.15)]
+        transition
+      "
+    >
+      <div className="flex items-start gap-4">
+        {/* ICON */}
+        <div
+          className="
+            flex items-center justify-center
+            w-10 h-10
+            rounded-xl
+            bg-[#FFF4E3]
+            border border-[#E6D5BC]
+            shrink-0
+          "
+        >
+          <Icon className="w-6 h-6 text-[#6B4423]" />
+        </div>
+
+        {/* TEXT */}
+        <div className="space-y-1">
+          <h3 className="font-medium text-[#6B4423] leading-snug">
+            {title}
+          </h3>
+          <p className="text-sm text-[#8B6F47] leading-relaxed">
             {content}
           </p>
         </div>
