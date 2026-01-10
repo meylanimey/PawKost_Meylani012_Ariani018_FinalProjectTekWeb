@@ -1,364 +1,347 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { ChevronDown, X } from "lucide-react";
 
-
-import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 
+export default function AddKost() {
+  const JENIS_KOST = useMemo(
+    () => ["Campur", "Putra", "Putri", "Pet Friendly"],
+    []
+  );
+  const DAERAH = useMemo(
+    () => [
+      "Yogyakarta",
+      "Semarang",
+      "Pontianak",
+      "Bandung",
+      "Kotawaringin Barat",
+      "Bali",
+      "Jakarta",
+      "Medan",
+    ],
+    []
+  );
+  const KAMPUS = useMemo(
+    () => [
+      "UAD",
+      "UGM",
+      "UNY",
+      "UI",
+      "ITB",
+      "UPR",
+      "UMY",
+      "Untop",
+      "Unair",
+      "Undip",
+      "Unpad",
+      "Telkom",
+    ],
+    []
+  );
 
-function formatRupiah(n) {
-  const num = Number(n || 0);
-  return new Intl.NumberFormat("id-ID").format(num);
-}
+  const [form, setForm] = useState({
+    nama: "",
+    urlGambar: "",
+    jenis: "Campur",
+    harga: "",
+    status: "Tersedia",
+    daerah: "Yogyakarta",
+    kampus: "UAD",
+    lokasi: "",
+    fasilitasInput: "",
+    fasilitas: [],
+    deskripsi: "",
+  });
 
+  const setField = (key, value) => setForm((p) => ({ ...p, [key]: value }));
 
-const DEFAULT_FACILITIES = ["WiFi", "Kamar Mandi Dalam", "Parkir"];
+  const addFacility = (name) => {
+    const cleaned = (name || "").trim();
+    if (!cleaned) return;
 
-
-export default function AddKost({ onAdd = () => {} }) {
-  const navigate = useNavigate();
-
-
-  const [name, setName] = useState("");
-  const [type, setType] = useState("");
-  const [price, setPrice] = useState("");
-  const [address, setAddress] = useState("");
-  const [description, setDescription] = useState("");
-  const [image, setImage] = useState("");
-
-
-  const [facilities, setFacilities] = useState(DEFAULT_FACILITIES);
-  const [facilityInput, setFacilityInput] = useState("");
-
-
-  const errors = useMemo(() => {
-    const e = {};
-    if (!name.trim()) e.name = "Nama kost tidak boleh kosong";
-    if (!type) e.type = "Tipe kost harus dipilih";
-    if (!String(price).trim()) e.price = "Harga per bulan harus di isi";
-    if (!address.trim()) e.address = "Alamat tidak boleh kosong";
-    if (!description.trim()) e.description = "Deskripsi tidak boleh kosong";
-    if (!image.trim()) e.image = "URL gambar wajib diisi";
-    return e;
-  }, [name, type, price, address, description, image]);
-
-
-  const isValid = Object.keys(errors).length === 0;
-
-
-  const addFacility = (raw) => {
-    const val = String(raw || "").trim();
-    if (!val) return;
-
-
-    const exists = facilities.some((f) => f.toLowerCase() === val.toLowerCase());
-    if (exists) return;
-
-
-    setFacilities((prev) => [...prev, val]);
+    setForm((p) => {
+      const exists = p.fasilitas.some(
+        (f) => f.toLowerCase() === cleaned.toLowerCase()
+      );
+      if (exists) return { ...p, fasilitasInput: "" };
+      return { ...p, fasilitas: [...p.fasilitas, cleaned], fasilitasInput: "" };
+    });
   };
 
-
-  const removeFacility = (val) => {
-    setFacilities((prev) => prev.filter((f) => f !== val));
+  const removeFacility = (name) => {
+    setForm((p) => ({
+      ...p,
+      fasilitas: p.fasilitas.filter((f) => f !== name),
+    }));
   };
 
+  const labelClass = "mb-1 block text-[16px] font-semibold text-[#734128]";
+  const titleClass = "text-[#734128] font-extrabold text-[40px] leading-tight";
+  const subtitleClass = "mt-1 text-[20px] font-normal text-[#734128]";
 
-  const handleFacilityKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      addFacility(facilityInput);
-      setFacilityInput("");
-    }
-  };
+  const inputClass =
+    "border-[#B7AB92] bg-white text-[#734128] focus-visible:ring-[#B7AB92]";
 
+  const dropdownClass =
+    "w-full appearance-none rounded-md border border-[#B7AB92] bg-[#F0E3D0] " +
+    "px-4 py-2 pr-12 text-sm text-[#734128] outline-none " +
+    "shadow-[inset_0_2px_8px_rgba(0,0,0,0.14)] " +
+    "focus:ring-2 focus:ring-[#B7AB92]";
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!isValid) return;
+  const actionBtnClass = "bg-[#6b4b34] text-white font-bold hover:bg-[#5b3f2c]";
 
+  const chipClass =
+    "flex items-center gap-2 rounded-md border border-[#B7AB92] bg-[#F0E3D0] px-3 py-1 " +
+    "text-xs font-semibold text-[#734128] shadow-[inset_0_2px_8px_rgba(0,0,0,0.14)]";
 
-    const newKost = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      type,
-      price: Number(price),
-      address: address.trim(),
-      description: description.trim(),
-      image: image.trim(),
-      facilities,
-      status: "Tersedia",
-    };
+  const Dropdown = ({ label, required, value, onChange, options }) => (
+    <div className="relative">
+      <label className={labelClass}>
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
 
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={dropdownClass}
+      >
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
 
-    onAdd(newKost);
-    navigate("/admin");
-  };
+      <ChevronDown
+        size={18}
+        className="pointer-events-none absolute right-4 top-[44px] -translate-y-1/2 text-[#734128]"
+      />
+    </div>
+  );
 
+  const imagePreview = (form.urlGambar || "").trim();
 
   return (
-    <div className="w-full">
-      <div className="mb-4 rounded-xl border border-[#EFEAE2] bg-white px-4 py-2 text-[11px] text-[#734128]/70">
-        Dashboard &nbsp;›&nbsp; Tambah Kost
+    <div className="min-h-[calc(100vh-120px)] bg-white">
+      <div className="mb-4">
+        <h1 className={titleClass}>Tambah Data Kost Baru</h1>
+        <p className={subtitleClass}>
+          Isi semua informasi kost yang sesuai dan lengkap
+        </p>
       </div>
 
-
-
-
-      <h1 className="mb-4 text-[32px] font-extrabold text-[#734128]">
-        Tambah Data Kost Baru
-      </h1>
-
-
-      <form
-        onSubmit={handleSubmit}
-        className="rounded-2xl border border-[#EFEAE2] bg-white p-6 shadow-sm"
-      >
-        <div className="mb-5">
-          <label className="mb-1 block text-[12px] font-bold text-[#734128]">
-            Nama Kost <span className="text-red-500">*</span>
-          </label>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Nama Kost"
-            className="h-9 rounded-xl border-[#E8DCCF] text-[12px] text-[#734128] placeholder:text-[#734128]/35"
-          />
-          {errors.name ? (
-            <p className="mt-1 flex items-center gap-2 text-[11px] text-[#734128]/80">
-              <span className="inline-block h-4 w-4 rounded-full bg-[#EFEAE2] text-center leading-4">
-                i
-              </span>
-              {errors.name}
-            </p>
-          ) : null}
-        </div>
-
-
-        <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-       
-          <div>
-            <label className="mb-1 block text-[12px] font-bold text-[#734128]">
-              Tipe Kost <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="h-9 w-full appearance-none rounded-xl border border-[#E8DCCF] bg-white px-3 pr-10 text-[12px] text-[#734128] outline-none"
-              >
-                <option value="">Pilih Tipe</option>
-                <option value="Putra">Putra</option>
-                <option value="Putri">Putri</option>
-                <option value="Campur">Campur</option>
-              </select>
-
-
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#734128]/60">
-                ⌄
-              </span>
+      <div className="rounded-2xl border border-[#D9CBB4] bg-[#F3EDE3] p-4 shadow-sm">
+        <div className="grid grid-cols-1 gap-0 lg:grid-cols-2">
+          <div className="p-3 lg:border-r lg:border-[#D9CBB4]">
+            <div className="mb-3">
+              <label className={labelClass}>
+                Nama Kost <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={form.nama}
+                onChange={(e) => setField("nama", e.target.value)}
+                className={inputClass}
+              />
             </div>
 
+            <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Dropdown
+                label="Jenis Kost"
+                required
+                value={form.jenis}
+                onChange={(v) => setField("jenis", v)}
+                options={JENIS_KOST}
+              />
 
-            {errors.type ? (
-              <p className="mt-1 flex items-center gap-2 text-[11px] text-[#734128]/80">
-                <span className="inline-block h-4 w-4 rounded-full bg-[#EFEAE2] text-center leading-4">
-                  i
-                </span>
-                {errors.type}
-              </p>
-            ) : null}
-          </div>
-
-
-          <div>
-            <label className="mb-1 block text-[12px] font-bold text-[#734128]">
-              Harga / Bulan <span className="text-red-500">*</span>
-            </label>
-
-
-            <div className="flex h-9 overflow-hidden rounded-xl border border-[#E8DCCF] bg-white">
-              <div className="flex w-14 items-center justify-center bg-[#F6EFE6] text-[12px] font-bold text-[#734128]">
-                Rp
+              <div>
+                <label className={labelClass}>
+                  Harga Sewa <span className="text-red-500">*</span>
+                </label>
+                <div className="flex items-center rounded-md border border-[#B7AB92] bg-white px-3 py-2 shadow-[inset_0_2px_6px_rgba(0,0,0,0.10)] focus-within:ring-2 focus-within:ring-[#B7AB92]">
+                  <span className="text-sm font-semibold text-[#734128]">
+                    Rp.
+                  </span>
+                  <input
+                    className="ml-2 w-full bg-transparent text-sm text-[#734128] outline-none placeholder:text-[#9a856e]"
+                    placeholder="Per Bulan"
+                    value={form.harga}
+                    onChange={(e) => setField("harga", e.target.value)}
+                    inputMode="numeric"
+                  />
+                </div>
               </div>
+            </div>
 
+            <div className="mb-3">
+              <label className={labelClass}>
+                Status Ketersediaan <span className="text-red-500">*</span>
+              </label>
+              <div className="mt-2 flex gap-8 text-[16px] text-[#734128]">
+                <label className="flex items-center gap-2 font-medium">
+                  <input
+                    type="radio"
+                    name="status"
+                    checked={form.status === "Tersedia"}
+                    onChange={() => setField("status", "Tersedia")}
+                  />
+                  Tersedia
+                </label>
+                <label className="flex items-center gap-2 font-medium">
+                  <input
+                    type="radio"
+                    name="status"
+                    checked={form.status === "Penuh"}
+                    onChange={() => setField("status", "Penuh")}
+                  />
+                  Penuh
+                </label>
+              </div>
+            </div>
 
-              <Input
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                inputMode="numeric"
-                placeholder=" "
-                className="h-9 w-full border-0 px-3 text-[12px] text-[#734128] shadow-none focus-visible:ring-0"
+            <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Dropdown
+                label="Daerah/Kota"
+                required
+                value={form.daerah}
+                onChange={(v) => setField("daerah", v)}
+                options={DAERAH}
+              />
+              <Dropdown
+                label="Area Kampus"
+                required
+                value={form.kampus}
+                onChange={(v) => setField("kampus", v)}
+                options={KAMPUS}
               />
             </div>
 
-
-            {errors.price ? (
-              <p className="mt-1 flex items-center gap-2 text-[11px] text-[#734128]/80">
-                <span className="inline-block h-4 w-4 rounded-full bg-[#EFEAE2] text-center leading-4">
-                  i
-                </span>
-                {errors.price}
-              </p>
-            ) : (
-              <p className="mt-1 text-[11px] text-[#734128]/70">
-                Preview: Rp. {formatRupiah(price)}/bulan
-              </p>
-            )}
-          </div>
-        </div>
-
-
-        <div className="mb-5">
-          <label className="mb-2 block text-[12px] font-bold text-[#734128]">
-            Fasilitas <span className="text-red-500">*</span>
-          </label>
-
-
-          <div className="flex flex-wrap gap-2">
-            {facilities.map((f) => (
-              <button
-                type="button"
-                key={f}
-                onClick={() => removeFacility(f)}
-                className="rounded-lg bg-[#EFE1D3] px-3 py-1 text-[11px] font-semibold text-[#734128] hover:bg-[#e6d6c7]"
-                title="Klik untuk hapus"
-              >
-                {f}
-              </button>
-            ))}
-
-
-            <div className="min-w-[220px] flex-1">
+            <div className="mb-3">
+              <label className={labelClass}>
+                Lokasi / Alamat Kost <span className="text-red-500">*</span>
+              </label>
               <Input
-                value={facilityInput}
-                onChange={(e) => setFacilityInput(e.target.value)}
-                onKeyDown={handleFacilityKeyDown}
-                placeholder="Isi disini ..."
-                className="h-9 rounded-xl border-[#E8DCCF] text-[12px] text-[#734128] placeholder:text-[#734128]/35"
+                value={form.lokasi}
+                onChange={(e) => setField("lokasi", e.target.value)}
+                placeholder="Jl. Ki Ageng Pemanahan..."
+                className={inputClass}
               />
-              <p className="mt-1 text-[11px] text-[#734128]/70">
-                Pisahkan dengan koma atau tekan Enter
-              </p>
             </div>
-          </div>
-        </div>
 
+            <div>
+              <label className={labelClass}>
+                Fasilitas <span className="text-red-500">*</span>
+              </label>
 
-        <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-[12px] font-bold text-[#734128]">
-              Alamat <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Jl. Ki Ageng Pemanahan ..."
-              className="h-9 rounded-xl border-[#E8DCCF] text-[12px] text-[#734128] placeholder:text-[#734128]/35"
-            />
-            {errors.address ? (
-              <p className="mt-1 flex items-center gap-2 text-[11px] text-[#734128]/80">
-                <span className="inline-block h-4 w-4 rounded-full bg-[#EFEAE2] text-center leading-4">
-                  i
-                </span>
-                {errors.address}
-              </p>
-            ) : null}
-          </div>
-
-
-          <div>
-            <label className="mb-1 block text-[12px] font-bold text-[#734128]">
-              Deskripsi <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Deskripsi singkat kost..."
-              className="h-9 rounded-xl border-[#E8DCCF] text-[12px] text-[#734128] placeholder:text-[#734128]/35"
-            />
-            {errors.description ? (
-              <p className="mt-1 flex items-center gap-2 text-[11px] text-[#734128]/80">
-                <span className="inline-block h-4 w-4 rounded-full bg-[#EFEAE2] text-center leading-4">
-                  i
-                </span>
-                {errors.description}
-              </p>
-            ) : null}
-          </div>
-        </div>
-
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-     
-          <div>
-            <label className="mb-1 block text-[12px] font-bold text-[#734128]">
-              URL Gambar <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="https://..."
-              className="h-9 rounded-xl border-[#E8DCCF] text-[12px] text-[#734128] placeholder:text-[#734128]/35"
-            />
-            {errors.image ? (
-              <p className="mt-1 flex items-center gap-2 text-[11px] text-[#734128]/80">
-                <span className="inline-block h-4 w-4 rounded-full bg-[#EFEAE2] text-center leading-4">
-                  i
-                </span>
-                {errors.image}
-              </p>
-            ) : null}
-
-
-            <p className="mt-3 flex items-center gap-2 text-[11px] text-[#734128]/70">
-              <span className="inline-block h-4 w-4 rounded-full bg-[#EFEAE2] text-center leading-4">
-                i
-              </span>
-              Semua input wajib diisi sebelum menyimpan
-            </p>
-          </div>
-
-
-          <div className="flex items-end justify-center md:justify-end">
-            <div className="h-[90px] w-[180px] overflow-hidden rounded-2xl bg-[#F6EFE6] shadow-sm">
-              {image ? (
-                <img
-                  src={image}
-                  alt="Preview"
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
+              <div className="flex gap-3">
+                <Input
+                  value={form.fasilitasInput}
+                  onChange={(e) => setField("fasilitasInput", e.target.value)}
+                  placeholder="Isi disini..."
+                  className={inputClass}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addFacility(form.fasilitasInput);
+                    }
                   }}
                 />
-              ) : null}
+                <Button
+                  type="button"
+                  className={actionBtnClass}
+                  onClick={() => addFacility(form.fasilitasInput)}
+                >
+                  Tambah
+                </Button>
+              </div>
+
+              {form.fasilitas.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {form.fasilitas.map((f) => (
+                    <div key={f} className={chipClass}>
+                      <span>{f}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeFacility(f)}
+                        className="rounded-full p-1 hover:bg-[#e4d6c2]"
+                        title="Hapus fasilitas"
+                      >
+                        <X size={14} className="text-[#734128]" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-3">
+            <div className="mb-3">
+              <label className={labelClass}>
+                URL Gambar <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={form.urlGambar}
+                onChange={(e) => setField("urlGambar", e.target.value)}
+                className={inputClass}
+              />
+            </div>
+
+            <div className="mb-3">
+              <div className="flex h-[190px] w-full items-center justify-center overflow-hidden rounded-xl bg-transparent">
+                {imagePreview ? (
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-full w-full rounded-xl object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center rounded-xl border border-[#D9CBB4] bg-white text-[16px] text-[#734128]">
+                    Preview gambar akan muncul di sini
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>
+                Deskripsi <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={form.deskripsi}
+                onChange={(e) => setField("deskripsi", e.target.value)}
+                className="min-h-[110px] w-full rounded-md border border-[#B7AB92] bg-white px-4 py-2 text-sm
+                           text-[#734128] outline-none shadow-[inset_0_2px_6px_rgba(0,0,0,0.10)]
+                           focus:ring-2 focus:ring-[#B7AB92]"
+              />
             </div>
           </div>
         </div>
+      </div>
 
-
-        <div className="mt-6 flex justify-end gap-3">
-          <Button
-            type="button"
-            className="h-9 rounded-xl !bg-[#EFE1D3] px-6 text-[12px] font-semibold !text-[#734128] hover:!bg-[#e6d6c7]"
-            onClick={() => navigate(-1)}
-          >
-            Batal
-          </Button>
-
-
-          <Button
-            type="submit"
-            disabled={!isValid}
-            className="h-9 rounded-xl !bg-[#734128] px-6 text-[12px] font-semibold !text-white hover:!bg-[#5f3412] disabled:opacity-60"
-          >
-            Simpan
-          </Button>
-        </div>
-      </form>
+      <div className="mt-4 flex justify-end gap-3">
+        <Button
+          type="button"
+          className={actionBtnClass}
+          onClick={() => window.history.back()}
+        >
+          Batal
+        </Button>
+        <Button
+          type="button"
+          className={actionBtnClass}
+          onClick={() => alert("Simpan (UI only)")}
+        >
+          Simpan
+        </Button>
+        <Button
+          type="button"
+          className={actionBtnClass}
+          onClick={() => alert("Simpan & Publish (UI only)")}
+        >
+          Simpan &amp; Publish &gt;
+        </Button>
+      </div>
     </div>
   );
 }
-
-
-

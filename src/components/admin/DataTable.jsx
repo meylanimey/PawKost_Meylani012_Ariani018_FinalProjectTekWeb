@@ -1,204 +1,141 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { NotebookPen, Trash2, TriangleAlert } from "lucide-react";
 
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from "../../components/ui/table";
-
-import { Badge } from "../../components/ui/badge";
-import { Button } from "../../components/ui/button";
-
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "../../components/ui/dialog";
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
-import editIcon from "../../assets/icons/edit.png";
-import trashIcon from "../../assets/icons/trash.png";
+export default function DataTable({ kosts = [], onDelete }) {
+  const navigate = useNavigate();
+  const [selected, setSelected] = useState(null);
 
-function formatRupiah(n) {
-  const num = Number(n || 0);
-  return new Intl.NumberFormat("id-ID").format(num);
-}
+  const statusVariant = (status) => {
+    const s = String(status || "").toLowerCase();
+    return s === "penuh" ? "destructive" : "default";
+  };
 
-export default function DataTable({ rows = [], onDelete = () => {} }) {
-  if (!rows.length) {
-    return (
-      <div className="rounded-xl bg-white p-6 text-center text-sm text-[#734128]/70">
-        Data kost belum ada.
-      </div>
-    );
-  }
+  const confirmDelete = () => {
+    if (!selected?.id) return;
+    onDelete?.(selected.id);
+    setSelected(null);
+  };
 
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white">
+    <div className="bg-white border rounded-2xl p-4">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-semibold">Kelola Kost</h1>
+        <Button onClick={() => navigate("/admin/kost/tambah")}>
+          Tambah Kost
+        </Button>
+      </div>
+
       <Table>
         <TableHeader>
-          <TableRow className="bg-[#EFEAE2]">
-            <TableHead className="w-[150px] text-center font-bold text-[#734128]">
-              Foto
-            </TableHead>
-            <TableHead className="text-center font-bold text-[#734128]">
-              Nama Kost
-            </TableHead>
-            <TableHead className="text-center font-bold text-[#734128]">
-              Tipe
-            </TableHead>
-            <TableHead className="text-center font-bold text-[#734128]">
-              Status
-            </TableHead>
-            <TableHead className="text-center font-bold text-[#734128]">
-              Harga
-            </TableHead>
-            <TableHead className="text-center font-bold text-[#734128]">
-              Aksi
-            </TableHead>
+          <TableRow>
+            <TableHead>Nama Kost</TableHead>
+            <TableHead>Harga</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
-          {rows.map((row) => {
-            const status = row.status ?? "Tersedia";
-            const statusClass =
-              status === "Tidak Tersedia"
-                ? "bg-red-600 text-white"
-                : "bg-[#2F8F4E] text-white";
+          {kosts.map((k) => (
+            <TableRow key={k.id}>
+              <TableCell className="font-medium">
+                {k.nama ?? k.name ?? "Nama Kost"}
+              </TableCell>
 
-            return (
-              <TableRow
-                key={row.id}
-                className="border-b border-[#F1E7DB] bg-[#FBF4EA]"
-              >
-                <TableCell className="py-4">
-                  <div className="mx-auto h-16 w-28 overflow-hidden rounded-2xl bg-[#F6EFE6] shadow-sm">
-                    {row.image ? (
-                      <img
-                        src={row.image}
-                        alt={row.name ? `Foto ${row.name}` : "Foto kost"}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : null}
-                  </div>
-                </TableCell>
+              <TableCell>{k.harga ? `Rp ${k.harga}` : "-"}</TableCell>
 
-                <TableCell className="py-4 text-xs font-semibold text-[#734128]">
-                  {row.name}
-                </TableCell>
+              <TableCell>
+                <Badge variant={statusVariant(k.status)}>
+                  {k.status ?? "tersedia"}
+                </Badge>
+              </TableCell>
 
-                <TableCell className="py-4 text-center">
-                  <Badge className="rounded-full bg-[#EFE1D3] px-4 py-1 text-[11px] font-semibold text-[#734128]">
-                    {row.type}
-                  </Badge>
-                </TableCell>
+              <TableCell className="text-right space-x-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => navigate(`/admin/kost/${k.id}/edit`)}
+                >
+                  <NotebookPen size={16} />
+                </Button>
 
-                <TableCell className="py-4 text-center">
-                  <Badge className={`rounded-full px-5 py-1 text-[11px] font-semibold ${statusClass}`}>
-                    {status}
-                  </Badge>
-                </TableCell>
-
-                <TableCell className="py-4 text-center text-xs text-[#734128]">
-                  Rp. {formatRupiah(row.price)}/bulan
-                </TableCell>
-
-                <TableCell className="py-4">
-                  <div className="flex justify-end gap-3">
+                <Dialog
+                  open={selected?.id === k.id}
+                  onOpenChange={(open) => !open && setSelected(null)}
+                >
+                  <DialogTrigger asChild>
                     <Button
-                      asChild
-                      className="
-                        h-8 min-w-[96px]
-                        rounded-xl
-                        !bg-[#F0E4D6]
-                        px-4
-                        text-[11px]
-                        font-bold
-                        !text-[#734128]
-                        hover:!bg-[#e4d4c1]
-                      "
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => setSelected(k)}
                     >
-                      <Link to={`/admin/edit/${row.id}`}>
-                        <span className="flex w-full items-center justify-center gap-2">
-                          <img
-                            src={editIcon}
-                            alt=""
-                            className="h-3.5 w-3.5 object-contain"
-                          />
-                          Edit
-                        </span>
-                      </Link>
+                      <Trash2 size={16} />
                     </Button>
+                  </DialogTrigger>
 
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          className="
-                            h-8 min-w-[96px]
-                            rounded-xl
-                            !bg-[#734128]
-                            px-4
-                            text-[11px]
-                            font-bold
-                            !text-white
-                            hover:!bg-[#5f3412]
-                          "
-                        >
-                          <span className="flex w-full items-center justify-center gap-2">
-                            <img
-                              src={trashIcon}
-                              alt=""
-                              className="h-3.5 w-3.5 object-contain"
-                            />
-                            Hapus
-                          </span>
-                        </Button>
-                      </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <TriangleAlert size={18} /> Hapus Kost?
+                      </DialogTitle>
+                    </DialogHeader>
 
-                      <DialogContent className="sm:max-w-[420px]">
-                        <DialogHeader>
-                          <DialogTitle className="text-[#734128]">
-                            Hapus Kost
-                          </DialogTitle>
-                          <DialogDescription className="text-sm">
-                            Apakah kamu yakin ingin menghapus kost{" "}
-                            <b>{row.name}</b>? Tindakan ini tidak dapat dibatalkan.
-                          </DialogDescription>
-                        </DialogHeader>
+                    <p className="text-sm text-gray-600">
+                      Yakin ingin menghapus{" "}
+                      <span className="font-semibold">
+                        {selected?.nama ?? selected?.name}
+                      </span>
+                      ?
+                    </p>
 
-                        <DialogFooter className="gap-2">
-                          <DialogClose asChild>
-                            <Button variant="outline" className="rounded-xl">
-                              Batal
-                            </Button>
-                          </DialogClose>
+                    <div className="flex justify-end gap-2 mt-4">
+                      <Button
+                        variant="outline"
+                        type="button"
+                        onClick={() => setSelected(null)}
+                      >
+                        Batal
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        type="button"
+                        onClick={confirmDelete}
+                      >
+                        Hapus
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </TableCell>
+            </TableRow>
+          ))}
 
-                          {/* ✅ ini bikin dialog nutup setelah delete */}
-                          <DialogClose asChild>
-                            <Button
-                              className="rounded-xl bg-[#A86932] font-semibold text-black hover:bg-[#8f5828]"
-                              onClick={() => onDelete(row.id)}
-                            >
-                              Ya, Hapus
-                            </Button>
-                          </DialogClose>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
+          {kosts.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center text-gray-500 py-8">
+                Belum ada data kost.
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>
