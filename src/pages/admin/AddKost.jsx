@@ -119,7 +119,7 @@ export default function AddKost() {
       />
     </div>
   );
-
+  // preview image
   const imagePreview = (form.urlGambar || "").trim();
 
   return (
