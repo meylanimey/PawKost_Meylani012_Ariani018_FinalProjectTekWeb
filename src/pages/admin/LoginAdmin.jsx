@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-const ADMIN_API = "https://694a827d26e870772065b9ec.mockapi.io/api/v2/admin";
+import { USERS_ENDPOINT } from "@/api/mockapi";
 
 export default function LoginAdmin() {
   const navigate = useNavigate();
@@ -11,7 +10,6 @@ export default function LoginAdmin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Kalau sudah login, jangan bisa balik ke login page
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
     if (isLoggedIn) navigate("/admin", { replace: true });
@@ -23,24 +21,64 @@ export default function LoginAdmin() {
     setLoading(true);
 
     try {
-      const res = await fetch(ADMIN_API);
-      if (!res.ok) throw new Error("HTTP error");
+      const res = await fetch(USERS_ENDPOINT);
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`HTTP ${res.status} ${text}`);
+      }
 
-      const admins = await res.json();
+      const users = await res.json();
+      const list = Array.isArray(users) ? users : [];
 
-      const admin = admins.find(
-        (a) => a.username === username && a.password === password
-      );
+      const input = String(username || "")
+        .trim()
+        .toLowerCase();
+      const pass = String(password || "");
 
-      if (!admin) {
+      const found = list.find((u) => {
+        const uUsername = String(u?.username || "").toLowerCase();
+        const uEmail = String(u?.email || "").toLowerCase();
+        const uName = String(u?.name || u?.nama || "").toLowerCase();
+        const uPass = String(u?.password || "");
+
+        const matchIdentity =
+          uUsername === input || uEmail === input || uName === input;
+
+        return matchIdentity && uPass === pass;
+      });
+
+      if (!found) {
         setError("Username atau password salah");
         setLoading(false);
         return;
       }
 
-      // ✅ login berhasil
+      const role = String(found?.role || "").toLowerCase();
+      if (role !== "admin") {
+        setError("Akun ini bukan admin. Silakan login sebagai admin.");
+        setLoading(false);
+        return;
+      }
+
       localStorage.setItem("admin_logged_in", "true");
-      localStorage.setItem("admin_username", admin.username);
+      localStorage.setItem(
+        "admin_username",
+        found.username || found.email || found.name || "admin"
+      );
+
+      localStorage.setItem(
+        "paw_admin",
+        JSON.stringify({
+          id: found.id,
+          name: found.name ?? found.nama ?? "Admin",
+          email: found.email ?? "",
+          username: found.username ?? "",
+          role: found.role ?? "admin",
+          avatar: found.avatar ?? "",
+        })
+      );
+
+      window.dispatchEvent(new Event("paw_admin_auth_change"));
 
       navigate("/admin", { replace: true });
     } catch (err) {
@@ -62,7 +100,6 @@ export default function LoginAdmin() {
                      drop-shadow-[0_6px_14px_rgba(0,0,0,0.18)]"
         />
 
-        {/* CARD LOGIN */}
         <div
           className="absolute left-[320px] top-[280px] -translate-y-1/2 w-[380px] rounded-2xl"
           style={{
@@ -72,14 +109,12 @@ export default function LoginAdmin() {
           }}
         >
           <form onSubmit={handleSubmit} className="p-8">
-            {/* Greeting */}
             <div className="text-[#734128] font-bold text-[20px] leading-snug">
               Hallo
               <br />
               Selamat Datang Admin
             </div>
 
-            {/* Title */}
             <div
               className="mt-0.5 text-[48px] font-black leading-none"
               style={{
@@ -91,14 +126,12 @@ export default function LoginAdmin() {
               Sign in
             </div>
 
-            {/* NOTIF ERROR */}
             {error && (
               <div className="mt-4 rounded-md bg-red-100 border border-red-300 px-3 py-2 text-sm font-bold text-red-700">
                 {error}
               </div>
             )}
 
-            {/* Username */}
             <div className="mt-6">
               <label className="block text-[12px] font-semibold text-[#6E4A2E] mb-2">
                 Username
@@ -112,7 +145,6 @@ export default function LoginAdmin() {
               />
             </div>
 
-            {/* Password */}
             <div className="mt-5">
               <label className="block text-[12px] font-semibold text-[#6E4A2E] mb-2">
                 Password
@@ -127,7 +159,6 @@ export default function LoginAdmin() {
               />
             </div>
 
-            {/* Button */}
             <button
               type="submit"
               disabled={loading}

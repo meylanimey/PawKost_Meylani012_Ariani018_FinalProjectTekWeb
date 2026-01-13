@@ -1,272 +1,550 @@
-import React, { useMemo, useState } from "react";
-import { Search, ChevronDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, Eye, Pencil, Trash2 } from "lucide-react";
 
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-import { Input } from "../../components/ui/input";
-import { Button } from "../../components/ui/button";
+import {
+  Table,
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+import { USERS_ENDPOINT } from "@/api/mockapi";
 
 export default function DaftarUser() {
-  // Dummy data (tanpa API)
-  const initialUsers = useMemo(
-    () => [
-      { id: 1, nama: "Ariani Putri", role: "User", email: "arianiputri@gmail.com", telp: "+62 877-1595-3934", status: "Aktif" },
-      { id: 2, nama: "Meylani", role: "User", email: "memey@gmail.com", telp: "+62 877-1595-3934", status: "Aktif" },
-      { id: 3, nama: "Ariani Putri", role: "User", email: "memey@gmail.com", telp: "+62 877-1595-3934", status: "Aktif" },
-      { id: 4, nama: "Ariani Putri", role: "User", email: "memey@gmail.com", telp: "+62 877-1595-3934", status: "Aktif" },
-      { id: 5, nama: "Ariani Putri", role: "User", email: "memey@gmail.com", telp: "+62 877-1595-3934", status: "Aktif" },
-      { id: 6, nama: "Ariani Putri", role: "User", email: "memey@gmail.com", telp: "+62 877-1595-3934", status: "Aktif" },
-    ],
-    []
-  );
+  const navigate = useNavigate();
 
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [apiErr, setApiErr] = useState("");
 
-  const [users, setUsers] = useState(initialUsers);
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("Semua Status");
+  const [q, setQ] = useState("");
+  const [role, setRole] = useState("Semua Role");
+  const [status, setStatus] = useState("Semua Status");
+
   const [page, setPage] = useState(1);
-  const perPage = 5;
+  const pageSize = 10;
 
+  const [openDelete, setOpenDelete] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [busyId, setBusyId] = useState(null);
 
-  // style tokens (ikut tema PawKost)
-  const titleClass = "text-[#734128] font-extrabold text-[40px] leading-tight";
-  const subtitleClass = "mt-1 text-[18px] font-normal text-[#734128]";
+  useEffect(() => {
+    let alive = true;
 
-
-  const inputBase = "border-[#B7AB92] bg-white text-[#734128] focus-visible:ring-[#B7AB92]";
-  const dropdownBase =
-    "appearance-none rounded-md border border-[#B7AB92] bg-[#F0E3D0] px-4 py-2 pr-10 text-sm text-[#734128] " +
-    "shadow-[inset_0_2px_8px_rgba(0,0,0,0.14)] outline-none focus:ring-2 focus:ring-[#B7AB92]";
-
-
-  const tableHead = "text-[#734128] font-bold";
-  const tableCell = "text-[#734128]";
-  const chipEmail =
-    "inline-flex items-center rounded-md border border-[#D9CBB4] bg-[#F0E3D0] px-3 py-1 text-sm text-[#734128]";
-
-
-  // filtering
-  const filtered = users.filter((u) => {
-    const q = query.trim().toLowerCase();
-    const matchQuery =
-      !q ||
-      u.nama.toLowerCase().includes(q) ||
-      u.email.toLowerCase().includes(q) ||
-      u.telp.toLowerCase().includes(q);
-
-
-    const matchStatus = statusFilter === "Semua Status" || u.status === statusFilter;
-    return matchQuery && matchStatus;
-  });
-
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
-  const currentPage = Math.min(page, totalPages);
-  const start = (currentPage - 1) * perPage;
-  const rows = filtered.slice(start, start + perPage);
-
-
-  // aksi dropdown (UI saja)
-  const handleAction = (id, action) => {
-    alert(`User ID: ${id}\nAksi: ${action}\n(UI saja, tanpa API)`);
-    // Kalau mau sekadar ubah tampilan status secara lokal (tanpa API), bisa:
-    if (action === "Aktifkan") {
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: "Aktif" } : u)));
+    async function load() {
+      setLoading(true);
+      setApiErr("");
+      try {
+        const res = await fetch(USERS_ENDPOINT);
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(`Gagal ambil data (${res.status}) ${text}`);
+        }
+        const data = await res.json();
+        if (alive) setUsers(Array.isArray(data) ? data : []);
+      } catch (e) {
+        if (alive) setApiErr(e?.message || "Gagal ambil data");
+      } finally {
+        if (alive) setLoading(false);
+      }
     }
-    if (action === "Nonaktif") {
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: "Nonaktif" } : u)));
-    }
-    if (action === "Hapus") {
-      setUsers((prev) => prev.filter((u) => u.id !== id));
+
+    load();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const refresh = async () => {
+    setLoading(true);
+    setApiErr("");
+    try {
+      const res = await fetch(USERS_ENDPOINT);
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Gagal refresh (${res.status}) ${text}`);
+      }
+      const data = await res.json();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setApiErr(e?.message || "Gagal refresh");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const getId = (u) => u?.id;
+
+  const getName = (u) => u?.name ?? u?.nama ?? "-";
+  const getEmail = (u) => u?.email ?? "-";
+  const getPhone = (u) => u?.phone ?? u?.telp ?? "-";
+  const getRole = (u) => u?.role ?? "user";
+  const getStatus = (u) => u?.status ?? "Aktif";
+  const getAvatar = (u) =>
+    u?.avatar ??
+    u?.photo ??
+    u?.image ??
+    "https://picsum.photos/seed/user/240/240";
+
+  const roleOptions = useMemo(() => {
+    const set = new Set(users.map((u) => String(getRole(u))).filter(Boolean));
+    return ["Semua Role", ...Array.from(set)];
+  }, [users]);
+
+  const statusOptions = useMemo(() => {
+    const set = new Set(users.map((u) => String(getStatus(u))).filter(Boolean));
+    return ["Semua Status", ...Array.from(set)];
+  }, [users]);
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+
+    return users.filter((u) => {
+      const nama = String(getName(u) || "").toLowerCase();
+      const email = String(getEmail(u) || "").toLowerCase();
+      const phone = String(getPhone(u) || "").toLowerCase();
+
+      const matchQ =
+        !query ||
+        nama.includes(query) ||
+        email.includes(query) ||
+        phone.includes(query);
+
+      const matchRole = role === "Semua Role" || String(getRole(u)) === role;
+
+      const matchStatus =
+        status === "Semua Status" || String(getStatus(u)) === status;
+
+      return matchQ && matchRole && matchStatus;
+    });
+  }, [users, q, role, status]);
+
+  const totalData = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalData / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * pageSize;
+  const end = start + pageSize;
+  const paged = filtered.slice(start, end);
+
+  const goPage = (p) => setPage(Math.min(Math.max(1, p), totalPages));
+
+  const updateUser = async (id, patch) => {
+    setApiErr("");
+    setBusyId(id);
+    try {
+      const nowIso = new Date().toISOString();
+      const res = await fetch(`${USERS_ENDPOINT}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...patch, updatedAt: nowIso }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Gagal update (${res.status}) ${text}`);
+      }
+
+      const updated = await res.json();
+      setUsers((prev) =>
+        prev.map((u) => (String(u.id) === String(id) ? updated : u))
+      );
+    } catch (e) {
+      setApiErr(e?.message || "Gagal update data");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const deleteUser = async (id) => {
+    setApiErr("");
+    setBusyId(id);
+    try {
+      const res = await fetch(`${USERS_ENDPOINT}/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Gagal hapus (${res.status}) ${text}`);
+      }
+      setUsers((prev) => prev.filter((u) => String(u.id) !== String(id)));
+    } catch (e) {
+      setApiErr(e?.message || "Gagal hapus data");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const cardShell =
+    "rounded-2xl border border-[#E5D5C0] bg-white shadow-sm overflow-hidden";
+
+  const selectClass =
+    "h-10 rounded-lg border border-[#E5D5C0] bg-white px-3 text-sm font-semibold text-[#734128] outline-none focus:ring-2 focus:ring-[#E5D5C0]";
+
+  const roleChip = (val) => (
+    <span className="inline-flex items-center rounded-full bg-[#EFE4D0] px-3 py-1 text-[13px] font-semibold text-[#734128]">
+      {val}
+    </span>
+  );
+
+  const statusPill = (val) => {
+    const v = String(val || "").toLowerCase();
+    const isAktif = v === "aktif";
+    const bg = isAktif ? "#2E8B57" : "#F25C3D";
+    return (
+      <span
+        className="inline-flex items-center justify-center rounded-full px-4 py-1.5 text-[14px] font-semibold text-white"
+        style={{ backgroundColor: bg }}
+      >
+        {val || "-"}
+      </span>
+    );
+  };
+
+  const askDelete = (user) => {
+    setPendingDelete(user);
+    setOpenDelete(true);
+  };
+
+  const confirmDelete = async () => {
+    const id = pendingDelete?.id;
+    setOpenDelete(false);
+    setPendingDelete(null);
+    if (id != null) await deleteUser(id);
+  };
+
+  const cancelDelete = () => {
+    setOpenDelete(false);
+    setPendingDelete(null);
+  };
 
   return (
-    <div className="bg-white">
-      {/* Header (background putih) */}
-      <div className="mb-4">
-        <h1 className={titleClass}>Daftar User</h1>
-        <p className={subtitleClass}>Kelola data pengguna terdaftar di sistem</p>
+    <div className="space-y-4">
+      {/* Title */}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-[56px] font-extrabold leading-none text-[#734128]">
+            Daftar User
+          </h1>
+          <p className="mt-1 text-[16px] font-semibold text-[#8F6753]">
+            Kelola seluruh data user yang terdaftar
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            className="h-10 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
+            onClick={refresh}
+            disabled={loading}
+          >
+            {loading ? "Memuat..." : "Refresh"}
+          </Button>
+        </div>
       </div>
 
+      {!!apiErr && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 whitespace-pre-line">
+          {apiErr}
+        </div>
+      )}
 
-      {/* Card tabel */}
-      <div className="rounded-2xl border border-[#D9CBB4] bg-[#F3EDE3] p-4 shadow-sm">
-        {/* Search + Filter */}
-        <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-          {/* Search */}
-          <div className="relative w-full sm:max-w-md">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#734128]" />
+      {/* Filters bar */}
+      <div className="rounded-xl bg-[#FBF4EE] border border-[#F2EFEF] p-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative w-[300px] max-w-full">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2"
+              size={18}
+            />
             <Input
-              value={query}
+              value={q}
               onChange={(e) => {
-                setQuery(e.target.value);
+                setQ(e.target.value);
                 setPage(1);
               }}
-              placeholder="Cari user...."
-              className={`${inputBase} pl-9`}
+              placeholder="Cari nama / email / phone..."
+              className="pl-10 bg-white border-[#E5D5C0]"
             />
           </div>
 
-
-          {/* Filter dropdown */}
-          <div className="relative w-full sm:w-48">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className={`w-full ${dropdownBase}`}
-            >
-              <option>Semua Status</option>
-              <option>Aktif</option>
-              <option>Nonaktif</option>
-            </select>
-            <ChevronDown size={18} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#734128]" />
-          </div>
-        </div>
-
-
-        {/* Table */}
-        <div className="overflow-hidden rounded-xl border border-[#D9CBB4] bg-[#F3EDE3]">
-          {/* Header row */}
-          <div className="grid grid-cols-[1.2fr_1.4fr_1.2fr_0.9fr_0.8fr] gap-3 border-b border-[#D9CBB4] bg-[#F3EDE3] px-4 py-3">
-            <div className={tableHead}>Nama</div>
-            <div className={tableHead}>Email</div>
-            <div className={tableHead}>No. Telepon</div>
-            <div className={tableHead}>Status Akun</div>
-            <div className={tableHead}>Aksi</div>
-          </div>
-
-
-          {/* Rows */}
-          <div className="bg-[#F3EDE3]">
-            {rows.map((u) => (
-              <div
-                key={u.id}
-                className="grid grid-cols-[1.2fr_1.4fr_1.2fr_0.9fr_0.8fr] gap-3 px-4 py-3 border-b border-[#E7DCCB] last:border-b-0"
-              >
-                {/* Nama + avatar */}
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 overflow-hidden rounded-full border border-[#734128] bg-white">
-                    <img src="/avatar.png" alt="avatar" className="h-full w-full object-cover" />
-                  </div>
-                  <div className="leading-tight">
-                    <div className="font-bold text-[#734128]">{u.nama}</div>
-                    <div className="text-xs text-[#734128] opacity-80">{u.role}</div>
-                  </div>
-                </div>
-
-
-                {/* Email */}
-                <div className={tableCell}>
-                  <span className={chipEmail}>{u.email}</span>
-                </div>
-
-
-                {/* Telepon */}
-                <div className={tableCell}>{u.telp}</div>
-
-
-                {/* Status */}
-                <div className="flex items-center">
-                  <span
-                    className={[
-                      "inline-flex min-w-[74px] justify-center rounded-md px-3 py-1 text-sm font-bold text-white",
-                      u.status === "Aktif" ? "bg-green-600" : "bg-gray-500",
-                    ].join(" ")}
-                  >
-                    {u.status}
-                  </span>
-                </div>
-
-
-                {/* Aksi */}
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    className="h-9 bg-[#EDE7DD] text-[#734128] font-semibold hover:bg-[#e2dacd]"
-                    onClick={() => alert(`Lihat detail user: ${u.nama}\n(UI saja)`)}
-                  >
-                    Lihat
-                  </Button>
-
-
-                  {/* Dropdown aksi */}
-                  <div className="relative">
-                    <select
-                      value=""
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (!val) return;
-                        handleAction(u.id, val);
-                        e.target.value = "";
-                      }}
-                      className="h-9 appearance-none rounded-md border border-[#B7AB92] bg-[#EDE7DD] px-3 pr-9 text-sm font-semibold text-[#734128]
-                                 outline-none hover:bg-[#e2dacd]"
-                    >
-                      <option value="">Edit</option>
-                      <option value="Aktifkan">Aktifkan</option>
-                      <option value="Nonaktif">Nonaktif</option>
-                      <option value="Hapus">Hapus</option>
-                    </select>
-                    <ChevronDown
-                      size={16}
-                      className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[#734128]"
-                    />
-                  </div>
-                </div>
-              </div>
+          <select
+            className={selectClass}
+            value={role}
+            onChange={(e) => {
+              setRole(e.target.value);
+              setPage(1);
+            }}
+          >
+            {roleOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
             ))}
+          </select>
 
-
-            {rows.length === 0 && (
-              <div className="px-4 py-8 text-center text-[#734128]">Tidak ada user yang cocok.</div>
-            )}
-          </div>
-        </div>
-
-
-        {/* Pagination */}
-        <div className="mt-3 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            className="h-8 w-8 rounded-md border border-[#D9CBB4] bg-[#F0E3D0] text-[#734128] font-bold hover:opacity-90"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          <select
+            className={selectClass}
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
           >
-            ‹
-          </button>
+            {statusOptions.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
 
-
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPage(p)}
-              className={[
-                "h-8 w-8 rounded-md border border-[#D9CBB4] text-[#734128] font-bold",
-                p === currentPage ? "bg-[#F0E3D0]" : "bg-white hover:bg-[#f7f2ea]",
-              ].join(" ")}
-            >
-              {p}
-            </button>
-          ))}
-
-
-          <button
+          <Button
+            className="h-10 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
             type="button"
-            className="h-8 w-8 rounded-md border border-[#D9CBB4] bg-[#F0E3D0] text-[#734128] font-bold hover:opacity-90"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => setPage(1)}
           >
-            ›
-          </button>
+            Cari
+          </Button>
         </div>
       </div>
+
+      <div className={cardShell}>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-[#EFE4D0]">
+              <TableHead className="text-[#734128] font-bold w-[150px]">
+                Avatar
+              </TableHead>
+              <TableHead className="text-[#734128] font-bold w-[260px]">
+                Nama
+              </TableHead>
+              <TableHead className="text-[#734128] font-bold w-[240px]">
+                Email
+              </TableHead>
+              <TableHead className="text-[#734128] font-bold w-[190px]">
+                Phone
+              </TableHead>
+              <TableHead className="text-[#734128] font-bold w-[170px]">
+                Role
+              </TableHead>
+              <TableHead className="text-[#734128] font-bold w-[220px]">
+                Status
+              </TableHead>
+              <TableHead className="text-[#734128] font-bold w-[240px]">
+                Aksi
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={7}
+                  className="py-10 text-center text-[#734128]"
+                >
+                  Memuat data...
+                </TableCell>
+              </TableRow>
+            ) : (
+              <>
+                {paged.map((u) => {
+                  const id = getId(u);
+                  const isBusy = String(busyId) === String(id);
+
+                  return (
+                    <TableRow
+                      key={id}
+                      className="bg-[#FBF4EE] border-t border-[#E5D5C0]"
+                    >
+                      <TableCell>
+                        <div className="h-20 w-20 rounded-2xl overflow-hidden border border-[#E5D5C0] bg-white">
+                          <img
+                            src={getAvatar(u)}
+                            alt={getName(u)}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="text-[#734128] font-semibold">
+                        <div className="leading-tight">{getName(u)}</div>
+                        <div className="text-xs text-[#8F6753] mt-1">
+                          {getRole(u)} • {getStatus(u)}
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="text-[#734128] font-semibold">
+                        {getEmail(u)}
+                      </TableCell>
+
+                      <TableCell className="text-[#734128] font-semibold">
+                        {getPhone(u)}
+                      </TableCell>
+
+                      <TableCell>{roleChip(getRole(u))}</TableCell>
+
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {statusPill(getStatus(u))}
+                          <select
+                            className="h-9 rounded-lg border border-[#E5D5C0] bg-white px-2 text-sm font-semibold text-[#734128] disabled:opacity-60"
+                            value={getStatus(u) || ""}
+                            disabled={isBusy}
+                            onChange={(e) =>
+                              updateUser(id, { status: e.target.value })
+                            }
+                          >
+                            {statusOptions
+                              .filter((s) => s !== "Semua Status")
+                              .map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            type="button"
+                            onClick={() => navigate(`/admin/users/${id}/edit`)}
+                            className="h-9 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
+                            disabled={isBusy}
+                          >
+                            <Pencil size={16} className="mr-2" />
+                            Edit
+                          </Button>
+
+                          <Button
+                            variant="secondary"
+                            className="h-9 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
+                            onClick={() => askDelete(u)}
+                            type="button"
+                            disabled={isBusy}
+                            title="Hapus"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+
+                {paged.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="py-10 text-center text-[#734128]"
+                    >
+                      Tidak ada data yang cocok.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </>
+            )}
+          </TableBody>
+        </Table>
+
+        <div className="flex items-center justify-between px-5 py-4 bg-[#EFE4D0] border-t border-[#E5D5C0]">
+          <div className="text-[14px] font-semibold text-[#734128]">
+            Menampilkan {totalData === 0 ? 0 : start + 1} sampai{" "}
+            {Math.min(end, totalData)} data dari {totalData} user
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="h-9 border-[#E5D5C0] text-[#734128]"
+              onClick={() => goPage(safePage - 1)}
+              disabled={safePage === 1}
+              type="button"
+            >
+              ‹
+            </Button>
+
+            {Array.from({ length: totalPages })
+              .slice(0, 5)
+              .map((_, idx) => {
+                const p = idx + 1;
+                const active = p === safePage;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => goPage(p)}
+                    className={`h-9 w-9 rounded-lg text-[14px] font-bold ${
+                      active
+                        ? "bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92]"
+                        : "text-[#734128] hover:bg-[#F0E3D0]/60"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
+
+            <Button
+              variant="outline"
+              className="h-9 border-[#E5D5C0] text-[#734128]"
+              onClick={() => goPage(safePage + 1)}
+              disabled={safePage === totalPages}
+              type="button"
+            >
+              ›
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[#734128]">Hapus User?</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-sm text-[#8F6753]">
+              Kamu yakin ingin menghapus{" "}
+              <span className="font-semibold text-[#734128]">
+                {pendingDelete ? getName(pendingDelete) : "-"}
+              </span>
+              ? Tindakan ini tidak bisa dibatalkan.
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-[#E5D5C0] text-[#734128]"
+                onClick={cancelDelete}
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                className="bg-[#F25C3D] text-white hover:brightness-95"
+                onClick={confirmDelete}
+              >
+                Hapus
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-
-

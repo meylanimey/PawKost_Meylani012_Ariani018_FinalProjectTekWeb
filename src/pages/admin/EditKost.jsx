@@ -5,28 +5,55 @@ import { ChevronDown, X } from "lucide-react";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 
-export default function EditKost({ kosts = [], onEdit }) {
+import { KOSTS_ENDPOINT } from "@/api/mockapi";
+
+export default function EditKost() {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const JENIS_KOST = useMemo(() => ["Campur", "Putra", "Putri", "Pet Friendly"], []);
+  const JENIS_KOST = useMemo(
+    () => ["Campur", "Putra", "Putri", "Pet Friendly"],
+    []
+  );
   const DAERAH = useMemo(
-    () => ["Yogyakarta", "Semarang", "Pontianak", "Bandung", "Kotawaringin Barat", "Bali", "Jakarta", "Medan"],
+    () => [
+      "Yogyakarta",
+      "Semarang",
+      "Pontianak",
+      "Bandung",
+      "Kotawaringin Barat",
+      "Bali",
+      "Jakarta",
+      "Medan",
+    ],
     []
   );
   const KAMPUS = useMemo(
-    () => ["UAD", "UGM", "UNY", "UI", "ITB", "UPR", "UMY", "Untop", "Unair", "Undip", "Unpad", "Telkom"],
+    () => [
+      "UAD",
+      "UGM",
+      "UNY",
+      "UI",
+      "ITB",
+      "UPR",
+      "UMY",
+      "Untop",
+      "Unair",
+      "Undip",
+      "Unpad",
+      "Telkom",
+    ],
     []
   );
 
-  const kost = useMemo(
-    () => (kosts || []).find((k) => String(k.id) === String(id)),
-    [kosts, id]
-  );
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
   const [form, setForm] = useState({
     nama: "",
     urlGambar: "",
+    nomorPemilik: "",
     jenis: "Campur",
     harga: "",
     status: "Tersedia",
@@ -36,103 +63,189 @@ export default function EditKost({ kosts = [], onEdit }) {
     fasilitasInput: "",
     fasilitas: [],
     deskripsi: "",
+    isPublished: false,
   });
 
-  // ✅ PREFILL EDIT: mapping lebih kuat (harga, lokasi, deskripsi, fasilitas pasti kebaca)
-  useEffect(() => {
-    if (!kost) return;
-
-    const nama = kost.nama ?? kost.name ?? kost.namaKost ?? "";
-
-    const urlGambar =
-      kost.urlGambar ?? kost.gambar ?? kost.image ?? kost.imageUrl ?? kost.foto ?? "";
-
-    const jenis = kost.jenis ?? kost.jenisKost ?? "Campur";
-
-    const hargaRaw = kost.harga ?? kost.hargaSewa ?? kost.harga_sewa ?? kost.price ?? "";
-    const harga = String(hargaRaw ?? "");
-
-    const status = kost.status ?? kost.ketersediaan ?? "Tersedia";
-
-    const daerah = kost.daerah ?? kost.kota ?? kost.daerahKota ?? "Yogyakarta";
-
-    const kampus = kost.kampus ?? kost.areaKampus ?? kost.kampusArea ?? "UAD";
-
-    const lokasi = kost.lokasi ?? kost.alamat ?? kost.lokasiAlamat ?? kost.address ?? "";
-
-    const deskripsi = kost.deskripsi ?? kost.description ?? kost.desc ?? "";
-
-    const fasilitasRaw = kost.fasilitas ?? kost.facilities ?? kost.fasilitasKost ?? [];
-
-    const fasilitas = Array.isArray(fasilitasRaw)
-      ? fasilitasRaw
-      : String(fasilitasRaw)
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-
-    setForm({
-      nama,
-      urlGambar,
-      jenis,
-      harga,
-      status,
-      daerah,
-      kampus,
-      lokasi,
-      fasilitasInput: "",
-      fasilitas,
-      deskripsi,
-    });
-  }, [kost]);
-
   const setField = (key, value) => setForm((p) => ({ ...p, [key]: value }));
+
+  const normalizePhone = (raw) => String(raw || "").replace(/\D/g, "");
 
   const addFacility = (name) => {
     const cleaned = (name || "").trim();
     if (!cleaned) return;
 
     setForm((p) => {
-      const exists = p.fasilitas.some((f) => f.toLowerCase() === cleaned.toLowerCase());
+      const exists = p.fasilitas.some(
+        (f) => f.toLowerCase() === cleaned.toLowerCase()
+      );
       if (exists) return { ...p, fasilitasInput: "" };
       return { ...p, fasilitas: [...p.fasilitas, cleaned], fasilitasInput: "" };
     });
   };
 
   const removeFacility = (name) => {
-    setForm((p) => ({ ...p, fasilitas: p.fasilitas.filter((f) => f !== name) }));
+    setForm((p) => ({
+      ...p,
+      fasilitas: p.fasilitas.filter((f) => f !== name),
+    }));
   };
 
-  const handleSubmit = () => {
-    if (!kost) return;
+  useEffect(() => {
+    let alive = true;
 
-    const updated = {
-      ...kost,
-      id: kost.id,
-      nama: form.nama,
-      urlGambar: form.urlGambar,
+    async function load() {
+      setErr("");
+      setLoading(true);
+      try {
+        const res = await fetch(`${KOSTS_ENDPOINT}/${id}`);
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(`Gagal ambil detail. (${res.status}) ${text}`);
+        }
+        const kost = await res.json();
+
+        const nama = kost.nama ?? kost.name ?? kost.namaKost ?? "";
+        const urlGambar =
+          kost.urlGambar ??
+          kost.gambar ??
+          kost.image ??
+          kost.imageUrl ??
+          kost.foto ??
+          "";
+        const nomorPemilik = kost.nomorPemilik ?? kost.wa ?? kost.phone ?? "";
+        const jenis = kost.jenis ?? kost.type ?? "Campur";
+
+        const hargaRaw =
+          kost.harga ?? kost.hargaSewa ?? kost.harga_sewa ?? kost.price ?? "";
+        const harga = String(hargaRaw ?? "");
+
+        const status = kost.status ?? kost.ketersediaan ?? "Tersedia";
+        const daerah =
+          kost.daerah ?? kost.kota ?? kost.daerahKota ?? "Yogyakarta";
+        const kampus =
+          kost.kampus ?? kost.areaKampus ?? kost.kampusArea ?? "UAD";
+        const lokasi =
+          kost.lokasi ??
+          kost.alamat ??
+          kost.lokasiAlamat ??
+          kost.location ??
+          kost.address ??
+          "";
+
+        const deskripsi = kost.deskripsi ?? kost.description ?? kost.desc ?? "";
+        const fasilitasRaw =
+          kost.fasilitas ?? kost.facilities ?? kost.fasilitasKost ?? [];
+        const fasilitas = Array.isArray(fasilitasRaw)
+          ? fasilitasRaw
+          : String(fasilitasRaw)
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean);
+
+        const isPublished = !!(kost.isPublished ?? false);
+
+        if (!alive) return;
+
+        setForm({
+          nama,
+          urlGambar,
+          nomorPemilik: String(nomorPemilik),
+          jenis,
+          harga,
+          status,
+          daerah,
+          kampus,
+          lokasi,
+          fasilitasInput: "",
+          fasilitas,
+          deskripsi,
+          isPublished,
+        });
+      } catch (e) {
+        if (alive) setErr(e?.message || "Gagal ambil data");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    }
+
+    if (id) load();
+    return () => {
+      alive = false;
+    };
+  }, [id]);
+
+  const validate = () => {
+    const errors = [];
+    if (!form.nama.trim()) errors.push("Nama kost wajib diisi");
+    if (!form.urlGambar.trim()) errors.push("URL gambar wajib diisi");
+    if (!form.lokasi.trim()) errors.push("Lokasi/alamat wajib diisi");
+    if (!form.deskripsi.trim()) errors.push("Deskripsi wajib diisi");
+    if (form.fasilitas.length === 0) errors.push("Minimal 1 fasilitas");
+
+    const hargaNum = Number(String(form.harga).replace(/[^\d]/g, ""));
+    if (!hargaNum) errors.push("Harga wajib angka (contoh: 850000)");
+
+    const wa = normalizePhone(form.nomorPemilik);
+    if (!wa) errors.push("Nomor pemilik (WhatsApp) wajib diisi");
+
+    return { ok: errors.length === 0, errors, hargaNum, wa };
+  };
+
+  const handleSubmit = async () => {
+    setErr("");
+    const v = validate();
+    if (!v.ok) {
+      setErr(v.errors.join("\n"));
+      return;
+    }
+
+    const nowIso = new Date().toISOString();
+
+    const payload = {
+      nama: form.nama.trim(),
+      urlGambar: form.urlGambar.trim(),
+      nomorPemilik: v.wa,
       jenis: form.jenis,
-      harga: form.harga,
-      hargaSewa: form.harga, // ✅ biar aman kalau tabel pakai hargaSewa
+      harga: v.hargaNum,
       status: form.status,
       daerah: form.daerah,
       kampus: form.kampus,
-      lokasi: form.lokasi,
-      alamat: form.lokasi, // ✅ biar aman kalau tabel pakai alamat
+      lokasi: form.lokasi.trim(),
       fasilitas: form.fasilitas,
-      deskripsi: form.deskripsi,
+      deskripsi: form.deskripsi.trim(),
+      isPublished: !!form.isPublished,
+      updatedAt: nowIso,
     };
 
-    if (typeof onEdit === "function") onEdit(updated);
-    navigate("/admin/kost", { replace: true });
+    setSaving(true);
+    try {
+      const res = await fetch(`${KOSTS_ENDPOINT}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Gagal simpan. (${res.status}) ${text}`);
+      }
+
+      await res.json();
+      alert("Berhasil simpan perubahan!");
+      navigate("/admin/kost", { replace: true });
+    } catch (e) {
+      setErr(e?.message || "Terjadi kesalahan saat menyimpan");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // ===== Styling (SAMA seperti tambah) =====
   const labelClass = "mb-1 block text-[16px] font-semibold text-[#734128]";
   const titleClass = "text-[#734128] font-extrabold text-[40px] leading-tight";
   const subtitleClass = "mt-1 text-[20px] font-normal text-[#734128]";
 
-  const inputClass = "border-[#B7AB92] bg-white text-[#734128] focus-visible:ring-[#B7AB92]";
+  const inputClass =
+    "border-[#B7AB92] bg-white text-[#734128] focus-visible:ring-[#B7AB92]";
 
   const dropdownClass =
     "w-full appearance-none rounded-md border border-[#B7AB92] bg-[#F0E3D0] " +
@@ -140,7 +253,8 @@ export default function EditKost({ kosts = [], onEdit }) {
     "shadow-[inset_0_2px_8px_rgba(0,0,0,0.14)] " +
     "focus:ring-2 focus:ring-[#B7AB92]";
 
-  const actionBtnClass = "bg-[#6b4b34] text-white font-bold hover:bg-[#5b3f2c]";
+  const actionBtnClass =
+    "bg-[#6b4b34] text-white font-bold hover:bg-[#5b3f2c] disabled:opacity-60";
 
   const chipClass =
     "flex items-center gap-2 rounded-md border border-[#B7AB92] bg-[#F0E3D0] px-3 py-1 " +
@@ -152,7 +266,12 @@ export default function EditKost({ kosts = [], onEdit }) {
         {label} {required && <span className="text-red-500">*</span>}
       </label>
 
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={dropdownClass}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={dropdownClass}
+        disabled={loading || saving}
+      >
         {options.map((opt) => (
           <option key={opt} value={opt}>
             {opt}
@@ -169,17 +288,11 @@ export default function EditKost({ kosts = [], onEdit }) {
 
   const imagePreview = (form.urlGambar || "").trim();
 
-  if (!kost) {
+  if (loading) {
     return (
-      <div className="bg-white">
+      <div className="min-h-[calc(100vh-120px)] bg-white">
         <h1 className={titleClass}>Edit Data Kost</h1>
-        <p className={subtitleClass}>Data kost tidak ditemukan</p>
-
-        <div className="mt-6">
-          <Button className={actionBtnClass} onClick={() => navigate("/admin/kost")}>
-            Kembali
-          </Button>
-        </div>
+        <p className={subtitleClass}>Memuat data...</p>
       </div>
     );
   }
@@ -188,8 +301,16 @@ export default function EditKost({ kosts = [], onEdit }) {
     <div className="min-h-[calc(100vh-120px)] bg-white">
       <div className="mb-4">
         <h1 className={titleClass}>Edit Data Kost</h1>
-        <p className={subtitleClass}>Perbarui informasi kost yang sesuai dan lengkap</p>
+        <p className={subtitleClass}>
+          Perbarui informasi kost yang sesuai dan lengkap
+        </p>
       </div>
+
+      {!!err && (
+        <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 whitespace-pre-line">
+          {err}
+        </div>
+      )}
 
       <div className="rounded-2xl border border-[#D9CBB4] bg-[#F3EDE3] p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-0 lg:grid-cols-2">
@@ -199,24 +320,55 @@ export default function EditKost({ kosts = [], onEdit }) {
               <label className={labelClass}>
                 Nama Kost <span className="text-red-500">*</span>
               </label>
-              <Input value={form.nama} onChange={(e) => setField("nama", e.target.value)} className={inputClass} />
+              <Input
+                value={form.nama}
+                onChange={(e) => setField("nama", e.target.value)}
+                className={inputClass}
+                disabled={saving}
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className={labelClass}>
+                Nomor Pemilik (WhatsApp) <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={form.nomorPemilik}
+                onChange={(e) => setField("nomorPemilik", e.target.value)}
+                placeholder="6281234567890"
+                className={inputClass}
+                inputMode="numeric"
+                disabled={saving}
+              />
+              <p className="mt-1 text-xs text-[#9a856e]">
+                Gunakan format 62xxxxxxxxxxx (tanpa +, spasi, atau tanda -)
+              </p>
             </div>
 
             <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Dropdown label="Jenis Kost" required value={form.jenis} onChange={(v) => setField("jenis", v)} options={JENIS_KOST} />
+              <Dropdown
+                label="Jenis Kost"
+                required
+                value={form.jenis}
+                onChange={(v) => setField("jenis", v)}
+                options={JENIS_KOST}
+              />
 
               <div>
                 <label className={labelClass}>
                   Harga Sewa <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center rounded-md border border-[#B7AB92] bg-white px-3 py-2 shadow-[inset_0_2px_6px_rgba(0,0,0,0.10)] focus-within:ring-2 focus-within:ring-[#B7AB92]">
-                  <span className="text-sm font-semibold text-[#734128]">Rp.</span>
+                  <span className="text-sm font-semibold text-[#734128]">
+                    Rp.
+                  </span>
                   <input
-                    className="ml-2 w-full bg-transparent text-sm text-[#734128] outline-none placeholder:text-[#9a856e]"
+                    className="ml-2 w-full bg-transparent text-sm text-[#734128] outline-none placeholder:text-[#9a856e] disabled:opacity-60"
                     placeholder="Per Bulan"
                     value={form.harga}
                     onChange={(e) => setField("harga", e.target.value)}
                     inputMode="numeric"
+                    disabled={saving}
                   />
                 </div>
               </div>
@@ -233,6 +385,7 @@ export default function EditKost({ kosts = [], onEdit }) {
                     name="status"
                     checked={form.status === "Tersedia"}
                     onChange={() => setField("status", "Tersedia")}
+                    disabled={saving}
                   />
                   Tersedia
                 </label>
@@ -242,6 +395,7 @@ export default function EditKost({ kosts = [], onEdit }) {
                     name="status"
                     checked={form.status === "Penuh"}
                     onChange={() => setField("status", "Penuh")}
+                    disabled={saving}
                   />
                   Penuh
                 </label>
@@ -249,8 +403,20 @@ export default function EditKost({ kosts = [], onEdit }) {
             </div>
 
             <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Dropdown label="Daerah/Kota" required value={form.daerah} onChange={(v) => setField("daerah", v)} options={DAERAH} />
-              <Dropdown label="Area Kampus" required value={form.kampus} onChange={(v) => setField("kampus", v)} options={KAMPUS} />
+              <Dropdown
+                label="Daerah/Kota"
+                required
+                value={form.daerah}
+                onChange={(v) => setField("daerah", v)}
+                options={DAERAH}
+              />
+              <Dropdown
+                label="Area Kampus"
+                required
+                value={form.kampus}
+                onChange={(v) => setField("kampus", v)}
+                options={KAMPUS}
+              />
             </div>
 
             <div className="mb-3">
@@ -262,6 +428,7 @@ export default function EditKost({ kosts = [], onEdit }) {
                 onChange={(e) => setField("lokasi", e.target.value)}
                 placeholder="Jl. Ki Ageng Pemanahan..."
                 className={inputClass}
+                disabled={saving}
               />
             </div>
 
@@ -282,8 +449,14 @@ export default function EditKost({ kosts = [], onEdit }) {
                       addFacility(form.fasilitasInput);
                     }
                   }}
+                  disabled={saving}
                 />
-                <Button type="button" className={actionBtnClass} onClick={() => addFacility(form.fasilitasInput)}>
+                <Button
+                  type="button"
+                  className={actionBtnClass}
+                  onClick={() => addFacility(form.fasilitasInput)}
+                  disabled={saving}
+                >
                   Tambah
                 </Button>
               </div>
@@ -296,8 +469,9 @@ export default function EditKost({ kosts = [], onEdit }) {
                       <button
                         type="button"
                         onClick={() => removeFacility(f)}
-                        className="rounded-full p-1 hover:bg-[#e4d6c2]"
+                        className="rounded-full p-1 hover:bg-[#e4d6c2] disabled:opacity-60"
                         title="Hapus fasilitas"
+                        disabled={saving}
                       >
                         <X size={14} className="text-[#734128]" />
                       </button>
@@ -308,19 +482,27 @@ export default function EditKost({ kosts = [], onEdit }) {
             </div>
           </div>
 
-          {/* RIGHT */}
           <div className="p-3">
             <div className="mb-3">
               <label className={labelClass}>
                 URL Gambar <span className="text-red-500">*</span>
               </label>
-              <Input value={form.urlGambar} onChange={(e) => setField("urlGambar", e.target.value)} className={inputClass} />
+              <Input
+                value={form.urlGambar}
+                onChange={(e) => setField("urlGambar", e.target.value)}
+                className={inputClass}
+                disabled={saving}
+              />
             </div>
 
             <div className="mb-3">
               <div className="flex h-[190px] w-full items-center justify-center overflow-hidden rounded-xl bg-transparent">
                 {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="h-full w-full rounded-xl object-cover" />
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-full w-full rounded-xl object-cover"
+                  />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center rounded-xl border border-[#D9CBB4] bg-white text-[16px] text-[#734128]">
                     Preview gambar akan muncul di sini
@@ -338,19 +520,48 @@ export default function EditKost({ kosts = [], onEdit }) {
                 onChange={(e) => setField("deskripsi", e.target.value)}
                 className="min-h-[110px] w-full rounded-md border border-[#B7AB92] bg-white px-4 py-2 text-sm
                            text-[#734128] outline-none shadow-[inset_0_2px_6px_rgba(0,0,0,0.10)]
-                           focus:ring-2 focus:ring-[#B7AB92]"
+                           focus:ring-2 focus:ring-[#B7AB92] disabled:opacity-60"
+                disabled={saving}
               />
+            </div>
+
+            <div className="mt-4 rounded-xl border border-[#D9CBB4] bg-white p-3">
+              <p className="text-sm font-semibold text-[#734128]">
+                Status Publish
+              </p>
+              <p className="text-xs text-[#9a856e]">
+                Draft tidak tampil di halaman user sebelum dipublish.
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!!form.isPublished}
+                  onChange={(e) => setField("isPublished", e.target.checked)}
+                  disabled={saving}
+                />
+                <span className="text-sm text-[#734128]">Publish sekarang</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <div className="mt-4 flex justify-end gap-3">
-        <Button type="button" className={actionBtnClass} onClick={() => navigate("/admin/kost")}>
+        <Button
+          type="button"
+          className={actionBtnClass}
+          onClick={() => navigate("/admin/kost")}
+          disabled={saving}
+        >
           Batal
         </Button>
-        <Button type="button" className={actionBtnClass} onClick={handleSubmit}>
-          Simpan Perubahan
+        <Button
+          type="button"
+          className={actionBtnClass}
+          onClick={handleSubmit}
+          disabled={saving}
+        >
+          {saving ? "Menyimpan..." : "Simpan Perubahan"}
         </Button>
       </div>
     </div>
