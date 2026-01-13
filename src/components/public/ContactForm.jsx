@@ -54,12 +54,10 @@ export default function ContactForm({ socials }) {
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      {/* Judul */}
       <h3 className="text-xl font-bold text-[#5C4033]">
         Kirim Pesan ke PAWKOST
       </h3>
 
-      {/* Deskripsi */}
       <p className="text-sm text-[#8B6F47] mt-1">
         Isi form, lalu pilih channel (WhatsApp / Email / Instagram).
       </p>
@@ -115,7 +113,6 @@ export default function ContactForm({ socials }) {
           />
         </Field>
 
-        {/* Preview */}
         <div className="rounded-2xl border border-gray-200 bg-[#FFF7ED] p-4">
           <div className="flex items-center justify-between">
             <p className="text-xs font-bold text-[#5C4033]">Preview Pesan</p>
@@ -140,13 +137,16 @@ export default function ContactForm({ socials }) {
           </pre>
         </div>
 
-        {/* Tombol */}
         <div className="flex flex-wrap gap-3">
           <a
             href={waLink}
             target="_blank"
             className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 font-bold border"
-            style={{ borderColor: waColor, backgroundColor: waBg, color: "#5C4033" }}
+            style={{
+              borderColor: waColor,
+              backgroundColor: waBg,
+              color: "#5C4033",
+            }}
           >
             <MessageCircle className="w-5 h-5" style={{ color: waColor }} />
             WhatsApp

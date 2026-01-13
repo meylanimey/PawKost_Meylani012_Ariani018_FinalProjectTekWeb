@@ -2,16 +2,13 @@ import { useEffect, useState } from "react";
 import { HelpCircle, Search, PhoneCall, UserCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
-
 export default function Bantuan() {
   const [mounted, setMounted] = useState(false);
-
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 40);
     return () => clearTimeout(t);
   }, []);
-
 
   return (
     <main className="min-h-screen bg-white">
@@ -36,13 +33,11 @@ export default function Bantuan() {
             Pusat Bantuan PAWKOST
           </h1>
 
-
           <p className="text-[#8B6F47] leading-relaxed">
-            Selamat datang di Pusat Bantuan PAWKOST. Halaman ini disediakan untuk
-            membantu kamu mendapatkan informasi dan solusi terkait penggunaan
-            layanan PAWKOST.
+            Selamat datang di Pusat Bantuan PAWKOST. Halaman ini disediakan
+            untuk membantu kamu mendapatkan informasi dan solusi terkait
+            penggunaan layanan PAWKOST.
           </p>
-
 
           <p className="text-[#8B6F47] leading-relaxed">
             Jika kamu ingin mencari kost, mendaftarkan kost, mengajukan kerja
@@ -52,15 +47,11 @@ export default function Bantuan() {
           </p>
         </section>
 
-
-
-
         <section className="space-y-6">
           <h2 className="text-xl font-medium text-[#6B4423] flex items-center gap-2">
             <HelpCircle className="w-5 h-5 text-[#6B4423]" />
             Pertanyaan Umum
           </h2>
-
 
           <div className="space-y-4">
             <FaqItem
@@ -69,13 +60,11 @@ export default function Bantuan() {
               answer="PAWKOST adalah platform pencarian kost yang membantu kamu menemukan kost sesuai kebutuhan lokasi, fasilitas, dan harga."
             />
 
-
             <FaqItem
               icon={Search}
               question="Bagaimana cara mencari kost?"
               answer="Kamu bisa menggunakan fitur pencarian dan filter untuk menyesuaikan nama kost, jenis kost, lokasi, harga, serta fasilitas yang diinginkan."
             />
-
 
             <FaqItem
               icon={PhoneCall}
@@ -85,23 +74,19 @@ export default function Bantuan() {
           </div>
         </section>
 
-
         <section className="space-y-3">
           <h2 className="text-xl font-medium text-[#6B4423] flex items-center gap-2">
             <UserCircle className="w-5 h-5 text-[#6B4423]" />
             Bantuan Akun
           </h2>
           <p className="text-[#8B6F47] leading-relaxed">
-            Jika mengalami kendala pada akun, seperti lupa kata sandi atau masalah
-            login, silakan hubungi tim PAWKOST melalui halaman kontak.
+            Jika mengalami kendala pada akun, seperti lupa kata sandi atau
+            masalah login, silakan hubungi tim PAWKOST melalui halaman kontak.
           </p>
         </section>
 
-
         <section className="rounded-2xl border border-[#E6D5BC] p-6 bg-white shadow-sm">
-          <h3 className="text-lg font-medium text-[#6B4423]">
-            Butuh Bantuan?
-          </h3>
+          <h3 className="text-lg font-medium text-[#6B4423]">Butuh Bantuan?</h3>
           <p className="mt-2 text-[#8B6F47]">
             Jika pertanyaan kamu belum terjawab, silakan hubungi kami melalui
             fitur Kontak agar tim PAWKOST dapat membantu kamu secara langsung.
@@ -125,7 +110,6 @@ export default function Bantuan() {
     </main>
   );
 }
-
 
 function FaqItem({ icon: Icon, question, answer }) {
   return (
