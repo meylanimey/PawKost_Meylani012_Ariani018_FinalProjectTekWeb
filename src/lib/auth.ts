@@ -10,7 +10,7 @@ export type User = {
   phone: string;
   password: string;
   role: Role;
-  avatar?: string; // dataURL (base64) atau path string
+  avatar?: string; 
   createdAt: string;
 };
 
@@ -23,7 +23,7 @@ export type Session = {
 const AUTH_EVENT = "pawkost:auth";
 
 function emitAuthChange() {
-  // untuk update komponen di tab yang sama
+
   window.dispatchEvent(new Event(AUTH_EVENT));
 }
 
@@ -50,7 +50,7 @@ function saveUsersRaw(users: User[]) {
 }
 
 function migrateUsers(users: any[]): User[] {
-  // upgrade user lama yang belum punya phone/avatar/role
+
   return (users || []).map((u) => ({
     id: String(u.id ?? Date.now()),
     name: String(u.name ?? "User"),
@@ -66,7 +66,7 @@ function migrateUsers(users: any[]): User[] {
 function seedDefaultUsersIfEmpty() {
   const existing = getUsersRaw();
   if (existing.length > 0) {
-    // migrate kalau data lama ada
+
     const migrated = migrateUsers(existing as any[]);
     saveUsersRaw(migrated);
     return;
@@ -102,7 +102,7 @@ export function getUsers(): User[] {
 
 export function saveUsers(users: User[]) {
   saveUsersRaw(users);
-  emitAuthChange(); // <-- penting biar navbar update juga
+  emitAuthChange(); 
 }
 
 export function getSession(): Session | null {
@@ -138,7 +138,6 @@ export function updateCurrentUser(
   users[idx] = { ...users[idx], ...patch };
   saveUsersRaw(users);
 
-  // trigger update UI di tab yang sama
   emitAuthChange();
 
   return users[idx];

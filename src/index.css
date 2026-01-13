@@ -5,9 +5,6 @@
   --radius: 0.625rem;
 }
 
-/* =========================
-   BASE STYLES
-   ========================= */
 @layer base {
   *,
   ::before,
@@ -48,9 +45,6 @@
   }
 }
 
-/* =========================
-   ANIMATIONS
-   ========================= */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -66,10 +60,6 @@
   animation: fade-in 0.5s ease-out;
 }
 
-/* =========================
-   DARK MODE (MANUAL)
-   Aktif jika <html class="dark">
-   ========================= */
 .dark body {
   @apply bg-gray-950 text-gray-100;
 }
