@@ -278,7 +278,7 @@ export default function DataKost() {
         <div className="flex items-center gap-2">
           <Button
             type="button"
-            className="h-10 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
+            className="h-10 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] hover:bg-[#ead9c4]"
             onClick={refresh}
             disabled={loading}
           >
@@ -286,7 +286,7 @@ export default function DataKost() {
           </Button>
           <Button
             type="button"
-            className="h-10 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
+            className="h-10 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] hover:bg-[#ead9c4]"
             onClick={() => navigate("/admin/kost/tambah")}
           >
             + Tambah
@@ -302,7 +302,7 @@ export default function DataKost() {
 
       <div className="rounded-xl bg-[#FBF4EE] border border-[#F2EFEF] p-3">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-[300px] max-w-full">
+          <div className="relative w-[-75px] max-w-full">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2"
               size={18}
@@ -379,7 +379,8 @@ export default function DataKost() {
           </select>
 
           <Button
-            className="h-10 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
+            c
+            className="h-10 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] hover:bg-[#ead9c4]"
             type="button"
             onClick={() => setPage(1)}
           >
@@ -392,28 +393,28 @@ export default function DataKost() {
         <Table>
           <TableHeader>
             <TableRow className="bg-[#EFE4D0]">
-              <TableHead className="text-[#734128] font-bold w-[150px]">
+              <TableHead className="text-[#734128] font-bold w-[-37.5px]">
                 Gambar
               </TableHead>
-              <TableHead className="text-[#734128] font-bold w-[260px]">
+              <TableHead className="text-[#734128] font-bold w-[-65px]">
                 Nama Kost
               </TableHead>
-              <TableHead className="text-[#734128] font-bold w-[160px]">
+              <TableHead className="text-[#734128] font-bold w-[-40px]">
                 Tipe
               </TableHead>
-              <TableHead className="text-[#734128] font-bold w-[170px]">
+              <TableHead className="text-[#734128] font-bold w-[42.5px]">
                 Harga
               </TableHead>
-              <TableHead className="text-[#734128] font-bold w-[220px]">
+              <TableHead className="text-[#734128] font-bold w-[13.75px]">
                 Status
               </TableHead>
-              <TableHead className="text-[#734128] font-bold w-[200px]">
+              <TableHead className="text-[#734128] font-bold w-[px]">
                 Publish
               </TableHead>
-              <TableHead className="text-[#734128] font-bold w-[210px]">
+              <TableHead className="text-[#734128] font-bold w-[52.5px]">
                 No. Pemilik
               </TableHead>
-              <TableHead className="text-[#734128] font-bold w-[240px]">
+              <TableHead className="text-[#734128] font-bold w-[-60px]">
                 Aksi
               </TableHead>
             </TableRow>
@@ -515,7 +516,7 @@ export default function DataKost() {
                           <Button
                             type="button"
                             onClick={() => navigate(`/detail/${id}`)}
-                            className="h-9 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
+                            className="h-9 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] hover:bg-[#ead9c4]"
                             disabled={isBusy}
                           >
                             <Eye size={16} className="mr-2" />
@@ -524,7 +525,7 @@ export default function DataKost() {
 
                           <Button
                             variant="secondary"
-                            className="h-9 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
+                            className="h-9 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] hover:bg-[#ead9c4]"
                             onClick={() => navigate(`/admin/kost/${id}/edit`)}
                             type="button"
                             disabled={isBusy}
@@ -535,7 +536,7 @@ export default function DataKost() {
 
                           <Button
                             variant="secondary"
-                            className="h-9 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] shadow-inner hover:bg-[#ead9c4]"
+                            className="h-9 bg-[#F0E3D0] text-[#734128] shadow-[inset_0_0_0_1px_#B7AB92] hover:bg-[#ead9c4]"
                             onClick={() => askDelete(k)}
                             type="button"
                             disabled={isBusy}

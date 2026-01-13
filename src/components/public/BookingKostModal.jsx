@@ -110,7 +110,7 @@ export default function BookingKostModal({ open, onClose, kost, waNumber }) {
 
   return (
     <div
-      className="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center p-4"
+      className="fixed inset-0 z-999 bg-black/40 flex items-center justify-center p-4"
       onMouseDown={onBackdrop}
     >
       <div

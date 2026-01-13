@@ -214,6 +214,7 @@ export default function SettingsProfile() {
                     {me.email}
                   </div>
 
+                  {/* GANTI: upload -> URL input */}
                   <div className="mt-3 space-y-2">
                     <Field label="URL Avatar (opsional)">
                       <input
