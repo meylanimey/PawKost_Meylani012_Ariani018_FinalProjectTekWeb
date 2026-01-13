@@ -4,6 +4,8 @@ import { ChevronDown, X } from "lucide-react";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 
+import { KOSTS_ENDPOINT } from "@/api/mockapi";
+
 export default function AddKost() {
   const JENIS_KOST = useMemo(
     () => ["Campur", "Putra", "Putri", "Pet Friendly"],
@@ -43,6 +45,7 @@ export default function AddKost() {
   const [form, setForm] = useState({
     nama: "",
     urlGambar: "",
+    nomorPemilik: "",
     jenis: "Campur",
     harga: "",
     status: "Tersedia",
@@ -52,9 +55,15 @@ export default function AddKost() {
     fasilitasInput: "",
     fasilitas: [],
     deskripsi: "",
+    isPublished: false,
   });
 
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
   const setField = (key, value) => setForm((p) => ({ ...p, [key]: value }));
+
+  const normalizePhone = (raw) => String(raw || "").replace(/\D/g, "");
 
   const addFacility = (name) => {
     const cleaned = (name || "").trim();
@@ -76,6 +85,101 @@ export default function AddKost() {
     }));
   };
 
+  const validate = () => {
+    const errors = [];
+    if (!form.nama.trim()) errors.push("Nama kost wajib diisi");
+    if (!form.urlGambar.trim()) errors.push("URL gambar wajib diisi");
+    if (!form.lokasi.trim()) errors.push("Lokasi/alamat wajib diisi");
+    if (!form.deskripsi.trim()) errors.push("Deskripsi wajib diisi");
+    if (form.fasilitas.length === 0) errors.push("Minimal 1 fasilitas");
+
+    const hargaNum = Number(String(form.harga).replace(/[^\d]/g, ""));
+    if (!hargaNum) errors.push("Harga wajib angka (contoh: 850000)");
+
+    const wa = normalizePhone(form.nomorPemilik);
+    if (!wa) errors.push("Nomor pemilik (WhatsApp) wajib diisi");
+
+    return { ok: errors.length === 0, errors, hargaNum, wa };
+  };
+
+  async function createKost(forcePublish) {
+    setErr("");
+    const v = validate();
+    if (!v.ok) {
+      setErr(v.errors.join("\n"));
+      return;
+    }
+
+    const finalPublish =
+      typeof forcePublish === "boolean" ? forcePublish : !!form.isPublished;
+
+    if (forcePublish === true && !form.isPublished) {
+      setField("isPublished", true);
+    }
+
+    const nowIso = new Date().toISOString();
+
+    const payload = {
+      nama: form.nama.trim(),
+      urlGambar: form.urlGambar.trim(),
+      nomorPemilik: v.wa,
+
+      jenis: form.jenis,
+      harga: v.hargaNum,
+      status: form.status,
+      daerah: form.daerah,
+      kampus: form.kampus,
+      lokasi: form.lokasi.trim(),
+
+      fasilitas: form.fasilitas,
+      deskripsi: form.deskripsi.trim(),
+
+      isPublished: finalPublish,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    };
+
+    setSaving(true);
+    try {
+      const res = await fetch(KOSTS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Gagal simpan. (${res.status}) ${text}`);
+      }
+
+      await res.json();
+
+      setForm({
+        nama: "",
+        urlGambar: "",
+        nomorPemilik: "",
+        jenis: "Campur",
+        harga: "",
+        status: "Tersedia",
+        daerah: "Yogyakarta",
+        kampus: "UAD",
+        lokasi: "",
+        fasilitasInput: "",
+        fasilitas: [],
+        deskripsi: "",
+        isPublished: false,
+      });
+
+      alert(
+        finalPublish ? "Berhasil simpan & publish!" : "Berhasil simpan (draft)!"
+      );
+    } catch (e) {
+      setErr(e?.message || "Terjadi kesalahan saat menyimpan");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const labelClass = "mb-1 block text-[16px] font-semibold text-[#734128]";
   const titleClass = "text-[#734128] font-extrabold text-[40px] leading-tight";
   const subtitleClass = "mt-1 text-[20px] font-normal text-[#734128]";
@@ -89,7 +193,8 @@ export default function AddKost() {
     "shadow-[inset_0_2px_8px_rgba(0,0,0,0.14)] " +
     "focus:ring-2 focus:ring-[#B7AB92]";
 
-  const actionBtnClass = "bg-[#6b4b34] text-white font-bold hover:bg-[#5b3f2c]";
+  const actionBtnClass =
+    "bg-[#6b4b34] text-white font-bold hover:bg-[#5b3f2c] disabled:opacity-60";
 
   const chipClass =
     "flex items-center gap-2 rounded-md border border-[#B7AB92] bg-[#F0E3D0] px-3 py-1 " +
@@ -119,7 +224,7 @@ export default function AddKost() {
       />
     </div>
   );
-  // preview image
+
   const imagePreview = (form.urlGambar || "").trim();
 
   return (
@@ -130,6 +235,12 @@ export default function AddKost() {
           Isi semua informasi kost yang sesuai dan lengkap
         </p>
       </div>
+
+      {!!err && (
+        <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 whitespace-pre-line">
+          {err}
+        </div>
+      )}
 
       <div className="rounded-2xl border border-[#D9CBB4] bg-[#F3EDE3] p-4 shadow-sm">
         <div className="grid grid-cols-1 gap-0 lg:grid-cols-2">
@@ -142,7 +253,25 @@ export default function AddKost() {
                 value={form.nama}
                 onChange={(e) => setField("nama", e.target.value)}
                 className={inputClass}
+                disabled={saving}
               />
+            </div>
+
+            <div className="mb-3">
+              <label className={labelClass}>
+                Nomor Pemilik (WhatsApp) <span className="text-red-500">*</span>
+              </label>
+              <Input
+                value={form.nomorPemilik}
+                onChange={(e) => setField("nomorPemilik", e.target.value)}
+                placeholder="6281234567890"
+                className={inputClass}
+                inputMode="numeric"
+                disabled={saving}
+              />
+              <p className="mt-1 text-xs text-[#9a856e]">
+                Gunakan format 62xxxxxxxxxxx (tanpa +, spasi, atau tanda -)
+              </p>
             </div>
 
             <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -163,11 +292,12 @@ export default function AddKost() {
                     Rp.
                   </span>
                   <input
-                    className="ml-2 w-full bg-transparent text-sm text-[#734128] outline-none placeholder:text-[#9a856e]"
+                    className="ml-2 w-full bg-transparent text-sm text-[#734128] outline-none placeholder:text-[#9a856e] disabled:opacity-60"
                     placeholder="Per Bulan"
                     value={form.harga}
                     onChange={(e) => setField("harga", e.target.value)}
                     inputMode="numeric"
+                    disabled={saving}
                   />
                 </div>
               </div>
@@ -184,6 +314,7 @@ export default function AddKost() {
                     name="status"
                     checked={form.status === "Tersedia"}
                     onChange={() => setField("status", "Tersedia")}
+                    disabled={saving}
                   />
                   Tersedia
                 </label>
@@ -193,6 +324,7 @@ export default function AddKost() {
                     name="status"
                     checked={form.status === "Penuh"}
                     onChange={() => setField("status", "Penuh")}
+                    disabled={saving}
                   />
                   Penuh
                 </label>
@@ -225,6 +357,7 @@ export default function AddKost() {
                 onChange={(e) => setField("lokasi", e.target.value)}
                 placeholder="Jl. Ki Ageng Pemanahan..."
                 className={inputClass}
+                disabled={saving}
               />
             </div>
 
@@ -245,11 +378,13 @@ export default function AddKost() {
                       addFacility(form.fasilitasInput);
                     }
                   }}
+                  disabled={saving}
                 />
                 <Button
                   type="button"
                   className={actionBtnClass}
                   onClick={() => addFacility(form.fasilitasInput)}
+                  disabled={saving}
                 >
                   Tambah
                 </Button>
@@ -263,8 +398,9 @@ export default function AddKost() {
                       <button
                         type="button"
                         onClick={() => removeFacility(f)}
-                        className="rounded-full p-1 hover:bg-[#e4d6c2]"
+                        className="rounded-full p-1 hover:bg-[#e4d6c2] disabled:opacity-60"
                         title="Hapus fasilitas"
+                        disabled={saving}
                       >
                         <X size={14} className="text-[#734128]" />
                       </button>
@@ -284,6 +420,7 @@ export default function AddKost() {
                 value={form.urlGambar}
                 onChange={(e) => setField("urlGambar", e.target.value)}
                 className={inputClass}
+                disabled={saving}
               />
             </div>
 
@@ -312,8 +449,27 @@ export default function AddKost() {
                 onChange={(e) => setField("deskripsi", e.target.value)}
                 className="min-h-[110px] w-full rounded-md border border-[#B7AB92] bg-white px-4 py-2 text-sm
                            text-[#734128] outline-none shadow-[inset_0_2px_6px_rgba(0,0,0,0.10)]
-                           focus:ring-2 focus:ring-[#B7AB92]"
+                           focus:ring-2 focus:ring-[#B7AB92] disabled:opacity-60"
+                disabled={saving}
               />
+            </div>
+
+            <div className="mt-4 rounded-xl border border-[#D9CBB4] bg-white p-3">
+              <p className="text-sm font-semibold text-[#734128]">
+                Status Publish
+              </p>
+              <p className="text-xs text-[#9a856e]">
+                Draft tidak tampil di halaman user sebelum dipublish.
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!!form.isPublished}
+                  onChange={(e) => setField("isPublished", e.target.checked)}
+                  disabled={saving}
+                />
+                <span className="text-sm text-[#734128]">Publish sekarang</span>
+              </div>
             </div>
           </div>
         </div>
@@ -324,22 +480,27 @@ export default function AddKost() {
           type="button"
           className={actionBtnClass}
           onClick={() => window.history.back()}
+          disabled={saving}
         >
           Batal
         </Button>
+
         <Button
           type="button"
           className={actionBtnClass}
-          onClick={() => alert("Simpan (UI only)")}
+          onClick={() => createKost()}
+          disabled={saving}
         >
-          Simpan
+          {saving ? "Menyimpan..." : "Simpan"}
         </Button>
+
         <Button
           type="button"
           className={actionBtnClass}
-          onClick={() => alert("Simpan & Publish (UI only)")}
+          onClick={() => createKost(true)}
+          disabled={saving}
         >
-          Simpan &amp; Publish &gt;
+          {saving ? "Menyimpan..." : "Simpan & Publish >"}
         </Button>
       </div>
     </div>
