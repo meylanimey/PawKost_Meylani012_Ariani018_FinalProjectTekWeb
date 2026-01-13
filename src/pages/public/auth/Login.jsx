@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { login } from "@/lib/auth";
+import { USERS_ENDPOINT } from "@/api/mockapi";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ export default function Login() {
     setTimeout(() => navigate(path), 260);
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setErr("");
 
@@ -41,7 +41,46 @@ export default function Login() {
     try {
       setLoading(true);
 
-      login({ email: value, password });
+      const res = await fetch(USERS_ENDPOINT);
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Gagal mengambil data user. (${res.status}) ${text}`);
+      }
+
+      const users = await res.json();
+      const list = Array.isArray(users) ? users : [];
+
+      const needle = value.toLowerCase();
+
+      const found = list.find((u) => {
+        const email = String(u?.email || "").toLowerCase();
+        const username = String(u?.username || "").toLowerCase();
+        const name = String(u?.name || u?.nama || "").toLowerCase();
+        const pass = String(u?.password || "");
+
+        const matchIdentity =
+          email === needle || username === needle || name === needle;
+
+        return matchIdentity && pass === String(password);
+      });
+
+      if (!found) {
+        throw new Error("Email/username atau kata sandi salah.");
+      }
+
+      const loggedUser = {
+        id: found.id,
+        name: found.name ?? found.nama ?? "User",
+        email: found.email ?? "",
+        phone: found.phone ?? "",
+        role: found.role ?? "user",
+        status: found.status ?? "Aktif",
+        avatar: found.avatar ?? "",
+      };
+
+      localStorage.setItem("paw_user", JSON.stringify(loggedUser));
+
+      window.dispatchEvent(new Event("paw_auth_change"));
 
       navigate("/", { replace: true });
       setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
@@ -55,12 +94,13 @@ export default function Login() {
   return (
     <main className="min-h-screen bg-white overflow-hidden">
       <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-        {/* LEFT: Form */}
         <section className="relative flex items-center justify-center bg-white px-5 sm:px-8 py-10">
           <div
             className={[
               "w-full max-w-md transition-all duration-500 ease-out",
-              mounted && !leaving ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
+              mounted && !leaving
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-2",
               leaving ? "opacity-0 -translate-y-1" : "",
             ].join(" ")}
           >
@@ -130,7 +170,6 @@ export default function Login() {
           </div>
         </section>
 
-        {/* RIGHT: Image */}
         <section className="relative hidden lg:block overflow-hidden bg-[#F7EEDB]">
           <img
             src="/images/kucing-pintu.png"
@@ -138,8 +177,6 @@ export default function Login() {
             className="absolute inset-0 w-full h-full object-cover"
             draggable={false}
           />
-          {/* kalau kamu merasa blur/opasitas rendah, biasanya gara-gara overlay gradient.
-              Sekarang aku kosongin. Kalau masih blur, cek file gambarnya atau CSS global. */}
         </section>
       </div>
     </main>
@@ -149,7 +186,9 @@ export default function Login() {
 function Field({ label, children }) {
   return (
     <div className="space-y-2">
-      <label className="block text-[18px] font-semibold text-[#8B6F5C]">{label}</label>
+      <label className="block text-[18px] font-semibold text-[#8B6F5C]">
+        {label}
+      </label>
       {children}
     </div>
   );

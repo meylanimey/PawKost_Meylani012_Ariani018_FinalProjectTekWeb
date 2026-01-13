@@ -1,17 +1,11 @@
-// Komponen EmptyKost
-// Digunakan untuk menampilkan state kosong (tidak ada data kost)
 export default function EmptyKost({
-  // Judul pesan (default jika tidak dikirim dari parent)
   title = "Kost tidak ditemukan",
 
-  // Deskripsi penjelasan tambahan
   description = "Coba ubah kata kunci pencarian atau filter yang kamu pilih.",
 
-  // Callback opsional untuk reset pencarian / filter
   onReset,
 }) {
   return (
-    // Container utama tampilan empty state
     <div
       className="
         w-full py-14
@@ -24,7 +18,6 @@ export default function EmptyKost({
         animate-fade-in
       "
     >
-      {/* Icon ilustrasi (emoji rumah) */}
       <div
         className="
           w-16 h-16 mb-4
@@ -38,20 +31,13 @@ export default function EmptyKost({
         🏠
       </div>
 
-      {/* Judul empty state */}
-      <h3 className="text-lg md:text-xl font-bold text-[#6B4423]">
-        {title}
-      </h3>
+      <h3 className="text-lg md:text-xl font-bold text-[#6B4423]">{title}</h3>
 
-      {/* Deskripsi empty state */}
-      <p className="mt-2 text-sm text-[#9C7A4F] max-w-md px-4">
-        {description}
-      </p>
+      <p className="mt-2 text-sm text-[#9C7A4F] max-w-md px-4">{description}</p>
 
-      {/* Tombol reset hanya muncul jika onReset dikirim */}
       {onReset && (
         <button
-          onClick={onReset} // Panggil fungsi reset saat tombol diklik
+          onClick={onReset}
           className="
             mt-5 px-6 py-2
             rounded-lg

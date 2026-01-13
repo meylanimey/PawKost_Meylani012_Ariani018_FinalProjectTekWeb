@@ -1,41 +1,6 @@
-// import hooks React yang dibutuhkan
 import { useEffect, useMemo, useRef, useState } from "react";
+import { KOSTS_ENDPOINT } from "@/api/mockapi";
 
-// opsi filter jenis kost
-const TYPE_OPTIONS = ["Campur", "Putra", "Putri", "Pet Friendly"];
-
-// opsi filter daerah
-const REGION_OPTIONS = [
-  "Yogyakarta",
-  "Semarang",
-  "Pontianak",
-  "Bandung",
-  "Kotawaringin Barat",
-  "Bali",
-  "Jakarta",
-  "Medan",
-];
-
-// opsi filter area kampus
-const CAMPUS_OPTIONS = [
-  "UAD",
-  "UGM",
-  "UNY",
-  "UI",
-  "ITB",
-  "UPR",
-  "UMY",
-  "UNTAN",
-  "UNAIR",
-  "UNDIP",
-  "UNPAD",
-  "TELKOM",
-];
-
-/**
- * opsi rentang harga
- * masih berupa string, nanti bisa dimapping di logic filter
- */
 const PRICE_OPTIONS = [
   "> Rp 250.000 – Rp 500.000",
   "> Rp 500.000 – Rp 1.000.000",
@@ -45,29 +10,69 @@ const PRICE_OPTIONS = [
   "> Rp 5.000.000",
 ];
 
-// komponen SearchBar utama
+const OPT_CACHE_KEY = "kost_search_filter_options_v1";
+const OPT_CACHE_TTL_MS = 10 * 60 * 1000;
+
+const safeStr = (v) => String(v ?? "").trim();
+const uniqSortId = (arr) =>
+  Array.from(new Set(arr.filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b, "id-ID")
+  );
+
+const isPublishedKost = (k) => !!(k?.isPublished ?? true);
+const getTipe = (k) => safeStr(k?.jenis ?? k?.type ?? "");
+const getDaerah = (k) => safeStr(k?.daerah ?? "");
+const getKampus = (k) => safeStr(k?.kampus ?? "");
+
+function readCachedOptions() {
+  try {
+    const raw = sessionStorage.getItem(OPT_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed?.ts || Date.now() - parsed.ts > OPT_CACHE_TTL_MS) return null;
+    if (
+      !parsed?.typeOptions ||
+      !parsed?.regionOptions ||
+      !parsed?.campusOptions
+    )
+      return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedOptions(payload) {
+  try {
+    sessionStorage.setItem(
+      OPT_CACHE_KEY,
+      JSON.stringify({ ts: Date.now(), ...payload })
+    );
+  } catch {}
+}
+
 export default function SearchBar({
-  value = "", // nilai input search
-  onChange, // handler perubahan input
-  onSubmit, // handler submit pencarian
+  value = "",
+  onChange,
+  onSubmit,
   placeholder = "Masukkan nama kost/jenis kost/lokasi/harga",
 }) {
-  // state untuk buka/tutup dropdown filter
   const [open, setOpen] = useState(false);
 
-  // state filter (masing-masing berupa array string)
   const [types, setTypes] = useState([]);
   const [regions, setRegions] = useState([]);
   const [campuses, setCampuses] = useState([]);
   const [priceRanges, setPriceRanges] = useState([]);
 
-  // ref untuk wrapper (deteksi klik luar)
-  const wrapperRef = useRef(null);
+  const [typeOptions, setTypeOptions] = useState([]);
+  const [regionOptions, setRegionOptions] = useState([]);
+  const [campusOptions, setCampusOptions] = useState([]);
+  const [loadingOpt, setLoadingOpt] = useState(true);
+  const [optErr, setOptErr] = useState("");
 
-  // ref untuk input search
+  const wrapperRef = useRef(null);
   const inputRef = useRef(null);
 
-  // effect untuk menutup dropdown saat klik di luar komponen
   useEffect(() => {
     const handler = (e) => {
       if (!wrapperRef.current) return;
@@ -77,52 +82,163 @@ export default function SearchBar({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // menghitung jumlah filter aktif (untuk badge angka)
+  useEffect(() => {
+    const cached = readCachedOptions();
+    if (cached) {
+      setTypeOptions(
+        Array.isArray(cached.typeOptions) ? cached.typeOptions : []
+      );
+      setRegionOptions(
+        Array.isArray(cached.regionOptions) ? cached.regionOptions : []
+      );
+      setCampusOptions(
+        Array.isArray(cached.campusOptions) ? cached.campusOptions : []
+      );
+      setLoadingOpt(false);
+      setOptErr("");
+
+      return;
+    }
+
+    const ctrl = new AbortController();
+
+    async function loadOptions() {
+      setLoadingOpt(true);
+      setOptErr("");
+
+      try {
+        const res = await fetch(KOSTS_ENDPOINT, { signal: ctrl.signal });
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(`Gagal ambil opsi filter (${res.status}) ${text}`);
+        }
+
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [];
+
+        const publishedList = list.filter(isPublishedKost);
+
+        const typesArr = [];
+        const regionsArr = [];
+        const campusesArr = [];
+
+        for (const k of publishedList) {
+          const t = getTipe(k);
+          const r = getDaerah(k);
+          const c = getKampus(k);
+          if (t) typesArr.push(t);
+          if (r) regionsArr.push(r);
+          if (c) campusesArr.push(c);
+        }
+
+        const payload = {
+          typeOptions: uniqSortId(typesArr),
+          regionOptions: uniqSortId(regionsArr),
+          campusOptions: uniqSortId(campusesArr),
+        };
+
+        setTypeOptions(payload.typeOptions);
+        setRegionOptions(payload.regionOptions);
+        setCampusOptions(payload.campusOptions);
+
+        writeCachedOptions(payload);
+      } catch (e) {
+        if (e?.name === "AbortError") return;
+
+        setOptErr(e?.message || "Gagal ambil opsi filter");
+
+        setTypeOptions(["Campur", "Putra", "Putri", "Pet Friendly"]);
+        setRegionOptions([
+          "Yogyakarta",
+          "Semarang",
+          "Pontianak",
+          "Bandung",
+          "Kotawaringin Barat",
+          "Bali",
+          "Jakarta",
+          "Medan",
+        ]);
+        setCampusOptions([
+          "UAD",
+          "UGM",
+          "UNY",
+          "UI",
+          "ITB",
+          "UPR",
+          "UMY",
+          "UNTAN",
+          "UNAIR",
+          "UNDIP",
+          "UNPAD",
+          "TELKOM",
+        ]);
+      } finally {
+        setLoadingOpt(false);
+      }
+    }
+
+    loadOptions();
+    return () => ctrl.abort();
+  }, []);
+
+  useEffect(() => {
+    setTypes((prev) => prev.filter((x) => typeOptions.includes(x)));
+  }, [typeOptions]);
+
+  useEffect(() => {
+    setRegions((prev) => prev.filter((x) => regionOptions.includes(x)));
+  }, [regionOptions]);
+
+  useEffect(() => {
+    setCampuses((prev) => prev.filter((x) => campusOptions.includes(x)));
+  }, [campusOptions]);
+
   const activeCount = useMemo(() => {
     return types.length + regions.length + campuses.length + priceRanges.length;
   }, [types, regions, campuses, priceRanges]);
 
-  // handler submit form pencarian
   const handleSubmit = (e) => {
-    e.preventDefault(); // mencegah reload halaman
+    e.preventDefault();
     onSubmit?.({
-      query: value, // keyword search
+      query: value,
       types,
       regions,
       campuses,
       priceRanges,
     });
-    setOpen(false); // tutup dropdown setelah submit
+    setOpen(false);
+  };
+
+  const resetAll = () => {
+    setTypes([]);
+    setRegions([]);
+    setCampuses([]);
+    setPriceRanges([]);
   };
 
   return (
-    // wrapper utama search bar
     <div ref={wrapperRef} className="relative w-full max-w-2xl mx-auto">
       <form onSubmit={handleSubmit}>
-        {/* BAR SEARCH */}
         <div
           className="w-full flex items-center gap-2
                      bg-white rounded-xl border border-[#E6D5BC]
                      shadow-sm px-3 py-2"
         >
-          {/* icon search */}
           <span className="text-[#9C7A4F]">
             <SearchIcon className="w-5 h-5" />
           </span>
 
-          {/* input pencarian */}
           <input
             ref={inputRef}
             value={value}
             onChange={(e) => onChange?.(e.target.value)}
-            onFocus={() => setOpen(true)} // buka dropdown saat fokus
+            onFocus={() => setOpen(true)}
             placeholder={placeholder}
             className="w-full bg-transparent outline-none
                        text-sm md:text-base text-[#6B4423]
                        placeholder:text-[#B59A74]"
           />
 
-          {/* tombol buka filter */}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -133,8 +249,6 @@ export default function SearchBar({
             aria-label="Buka filter"
           >
             <SlidersIcon className="w-5 h-5" />
-
-            {/* badge jumlah filter aktif */}
             {activeCount > 0 && (
               <span
                 className="absolute -top-2 -right-2 min-w-5 h-5
@@ -146,7 +260,6 @@ export default function SearchBar({
             )}
           </button>
 
-          {/* tombol submit */}
           <button
             type="submit"
             className="shrink-0 rounded-lg px-4 py-2
@@ -159,38 +272,47 @@ export default function SearchBar({
         </div>
       </form>
 
-      {/* DROPDOWN FILTER */}
       {open && (
         <div
           className="absolute left-0 right-0 mt-2 z-50
                      rounded-xl border border-[#E6D5BC]
                      bg-white shadow-lg p-4"
         >
-          {/* filter jenis kost */}
+          <div className="mb-3 flex items-start justify-between gap-2">
+            <div className="text-xs text-[#8B6F47]">
+              {loadingOpt ? "Memuat opsi filter..." : "Opsi filter siap"}
+              {!loadingOpt && (
+                <span className="ml-2 text-[11px] text-[#B59A74]">
+                  (opsi dari kost published)
+                </span>
+              )}
+            </div>
+
+            {!!optErr && (
+              <div className="text-xs text-red-600 whitespace-pre-line text-right">
+                {optErr}
+              </div>
+            )}
+          </div>
+
           <FilterSection
             title="Jenis Kost"
-            options={TYPE_OPTIONS}
+            options={typeOptions}
             selected={types}
             setSelected={setTypes}
           />
-
-          {/* filter daerah */}
           <FilterSection
             title="Daerah"
-            options={REGION_OPTIONS}
+            options={regionOptions}
             selected={regions}
             setSelected={setRegions}
           />
-
-          {/* filter area kampus */}
           <FilterSection
             title="Area Kampus"
-            options={CAMPUS_OPTIONS}
+            options={campusOptions}
             selected={campuses}
             setSelected={setCampuses}
           />
-
-          {/* filter harga */}
           <FilterSection
             title="Rentang Harga"
             options={PRICE_OPTIONS}
@@ -198,23 +320,15 @@ export default function SearchBar({
             setSelected={setPriceRanges}
           />
 
-          {/* tombol bawah */}
           <div className="mt-4 flex items-center justify-between gap-2">
-            {/* reset semua filter */}
             <button
               type="button"
-              onClick={() => {
-                setTypes([]);
-                setRegions([]);
-                setCampuses([]);
-                setPriceRanges([]);
-              }}
+              onClick={resetAll}
               className="text-sm font-semibold text-[#9C7A4F] hover:text-[#6B4423] transition"
             >
               Reset Filter
             </button>
 
-            {/* tutup dropdown */}
             <button
               type="button"
               onClick={() => setOpen(false)}
@@ -232,9 +346,9 @@ export default function SearchBar({
   );
 }
 
-// komponen section filter (reusable)
 function FilterSection({ title, options, selected, setSelected }) {
-  // toggle pilihan filter (tambah / hapus dari array)
+  const safeOptions = Array.isArray(options) ? options : [];
+
   const toggle = (opt) => {
     setSelected((prev) =>
       prev.includes(opt) ? prev.filter((x) => x !== opt) : [...prev, opt]
@@ -243,35 +357,38 @@ function FilterSection({ title, options, selected, setSelected }) {
 
   return (
     <div className="mb-4">
-      {/* judul filter */}
       <p className="text-sm font-bold text-[#6B4423]">{title}</p>
 
-      {/* list opsi */}
       <div className="mt-2 flex flex-wrap gap-2">
-        {options.map((opt) => {
-          const active = selected.includes(opt);
-          return (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => toggle(opt)}
-              className={[
-                "px-3 py-1.5 rounded-full text-xs font-semibold border transition",
-                active
-                  ? "bg-[#E6D5BC] text-[#6B4423] border-[#D8C2A0]"
-                  : "bg-white text-[#8B6F47] border-[#E6D5BC] hover:bg-[#FFF8ED]",
-              ].join(" ")}
-            >
-              {opt}
-            </button>
-          );
-        })}
+        {safeOptions.length === 0 ? (
+          <div className="text-xs text-[#8B6F47]">
+            Belum ada opsi untuk {title.toLowerCase()}.
+          </div>
+        ) : (
+          safeOptions.map((opt) => {
+            const active = selected.includes(opt);
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => toggle(opt)}
+                className={[
+                  "px-3 py-1.5 rounded-full text-xs font-semibold border transition",
+                  active
+                    ? "bg-[#E6D5BC] text-[#6B4423] border-[#D8C2A0]"
+                    : "bg-white text-[#8B6F47] border-[#E6D5BC] hover:bg-[#FFF8ED]",
+                ].join(" ")}
+              >
+                {opt}
+              </button>
+            );
+          })
+        )}
       </div>
     </div>
   );
 }
 
-/* ICON SEARCH */
 function SearchIcon({ className = "" }) {
   return (
     <svg
@@ -295,7 +412,6 @@ function SearchIcon({ className = "" }) {
   );
 }
 
-/* ICON FILTER */
 function SlidersIcon({ className = "" }) {
   return (
     <svg

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { getCurrentUser, getSession, logout, onAuthChange } from "@/lib/auth";
+import { USERS_ENDPOINT } from "@/api/mockapi";
 
 export default function Navbar() {
   const [openCari, setOpenCari] = useState(false);
@@ -19,33 +19,67 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [session, setSession] = useState(() => getSession());
-  const [me, setMe] = useState(() => getCurrentUser());
+  const [me, setMe] = useState(() => readLocalUser());
+  const [meLoading, setMeLoading] = useState(false);
 
-  // ====== SYNC AUTH (TAB SAMA + TAB LAIN) ======
+  const abortRef = useRef(null);
+  const lastFetchedIdRef = useRef(null);
+
   useEffect(() => {
-    const sync = () => {
-      setSession(getSession());
-      setMe(getCurrentUser());
-    };
+    const sync = () => setMe(readLocalUser());
 
-    // initial
     sync();
 
-    // tab lain
     const onStorage = () => sync();
     window.addEventListener("storage", onStorage);
 
-    // tab yang sama (login/logout/update profile)
-    const off = onAuthChange(sync);
+    const onLocal = () => sync();
+    window.addEventListener("paw_auth_change", onLocal);
 
     return () => {
       window.removeEventListener("storage", onStorage);
-      off();
+      window.removeEventListener("paw_auth_change", onLocal);
     };
   }, []);
 
-  // close menus on route change
+  useEffect(() => {
+    if (!me?.id) {
+      lastFetchedIdRef.current = null;
+      if (abortRef.current) abortRef.current.abort();
+      return;
+    }
+
+    if (String(lastFetchedIdRef.current) === String(me.id)) return;
+    lastFetchedIdRef.current = me.id;
+
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    (async () => {
+      setMeLoading(true);
+      try {
+        const res = await fetch(`${USERS_ENDPOINT}/${me.id}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) throw new Error("Fetch user gagal");
+        const fresh = await res.json();
+
+        setMe((prev) => {
+          const merged = { ...(prev || {}), ...(fresh || {}) };
+          localStorage.setItem("paw_user", JSON.stringify(merged));
+          return merged;
+        });
+      } catch (e) {
+        if (e?.name === "AbortError") return;
+      } finally {
+        setMeLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [me?.id]);
+
   useEffect(() => {
     setOpenCari(false);
     setOpenLainnya(false);
@@ -56,7 +90,6 @@ export default function Navbar() {
     setOpenLainnyaMobile(false);
   }, [location.pathname]);
 
-  // lock body scroll when mobile menu open
   useEffect(() => {
     document.body.style.overflow = openMobile ? "hidden" : "";
     return () => {
@@ -64,12 +97,14 @@ export default function Navbar() {
     };
   }, [openMobile]);
 
-  // close dropdowns when click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (cariRef.current && !cariRef.current.contains(e.target)) setOpenCari(false);
-      if (lainnyaRef.current && !lainnyaRef.current.contains(e.target)) setOpenLainnya(false);
-      if (userRef.current && !userRef.current.contains(e.target)) setOpenUser(false);
+      if (cariRef.current && !cariRef.current.contains(e.target))
+        setOpenCari(false);
+      if (lainnyaRef.current && !lainnyaRef.current.contains(e.target))
+        setOpenLainnya(false);
+      if (userRef.current && !userRef.current.contains(e.target))
+        setOpenUser(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -123,15 +158,22 @@ export default function Navbar() {
   const avatarSrc = me?.avatar || "/images/cat.png";
 
   const handleLogout = () => {
-    logout(); // auth.ts akan emitAuthChange(), navbar auto update
+    if (abortRef.current) abortRef.current.abort();
+    localStorage.removeItem("paw_user");
+    window.dispatchEvent(new Event("paw_auth_change"));
     goHome();
   };
+
+  const isLoggedIn = !!me?.id;
 
   return (
     <header className="bg-[#EFE4D0] shadow-sm border-b border-[#E5D5C0] sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between gap-4">
-        {/* LOGO */}
-        <button type="button" onClick={goHome} className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={goHome}
+          className="flex items-center gap-2"
+        >
           <img
             src="/logo-pawkost.png"
             alt="PAWKOST"
@@ -144,7 +186,6 @@ export default function Navbar() {
           </div>
         </button>
 
-        {/* HAMBURGER (MOBILE) */}
         <button
           type="button"
           className="md:hidden inline-flex items-center justify-center rounded-md p-2
@@ -156,7 +197,6 @@ export default function Navbar() {
           {openMobile ? <IconX /> : <IconHamburger />}
         </button>
 
-        {/* NAV (DESKTOP) */}
         <nav className="hidden md:flex items-center gap-6 ml-auto mr-2">
           <button
             type="button"
@@ -166,7 +206,6 @@ export default function Navbar() {
             Beranda
           </button>
 
-          {/* CARI KOST */}
           <div ref={cariRef} className="relative">
             <button
               type="button"
@@ -182,16 +221,32 @@ export default function Navbar() {
             </button>
 
             <Dropdown open={openCari} align="left">
-              <button type="button" className="dropdown-item" onClick={() => goToSection("pilihan-kost")}>
+              <button
+                type="button"
+                className="dropdown-item"
+                onClick={() => goToSection("pilihan-kost")}
+              >
                 Pilihan Kost
               </button>
-              <button type="button" className="dropdown-item" onClick={() => goToSection("rekomendasi-kost")}>
+              <button
+                type="button"
+                className="dropdown-item"
+                onClick={() => goToSection("rekomendasi-kost")}
+              >
                 Rekomendasi Kost
               </button>
-              <button type="button" className="dropdown-item" onClick={() => goToSection("kost-kampus")}>
+              <button
+                type="button"
+                className="dropdown-item"
+                onClick={() => goToSection("kost-kampus")}
+              >
                 Kost Area Kampus
               </button>
-              <button type="button" className="dropdown-item" onClick={() => goToSection("kost-hemat")}>
+              <button
+                type="button"
+                className="dropdown-item"
+                onClick={() => goToSection("kost-hemat")}
+              >
                 Kost Hemat
               </button>
             </Dropdown>
@@ -200,12 +255,13 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => goPage("/kontak")}
-            className={`${baseLink} ${isActivePath("/kontak") ? activeLink : ""}`}
+            className={`${baseLink} ${
+              isActivePath("/kontak") ? activeLink : ""
+            }`}
           >
             Kontak
           </button>
 
-          {/* LAINNYA */}
           <div ref={lainnyaRef} className="relative">
             <button
               type="button"
@@ -223,21 +279,27 @@ export default function Navbar() {
             <Dropdown open={openLainnya} align="right">
               <button
                 type="button"
-                className={`dropdown-item ${isActivePath("/bantuan") ? "dropdown-active" : ""}`}
+                className={`dropdown-item ${
+                  isActivePath("/bantuan") ? "dropdown-active" : ""
+                }`}
                 onClick={() => goPage("/bantuan")}
               >
                 Pusat Bantuan
               </button>
               <button
                 type="button"
-                className={`dropdown-item ${isActivePath("/privasi") ? "dropdown-active" : ""}`}
+                className={`dropdown-item ${
+                  isActivePath("/privasi") ? "dropdown-active" : ""
+                }`}
                 onClick={() => goPage("/privasi")}
               >
                 Kebijakan Privasi
               </button>
               <button
                 type="button"
-                className={`dropdown-item ${isActivePath("/syarat") ? "dropdown-active" : ""}`}
+                className={`dropdown-item ${
+                  isActivePath("/syarat") ? "dropdown-active" : ""
+                }`}
                 onClick={() => goPage("/syarat")}
               >
                 Syarat &amp; Ketentuan
@@ -246,9 +308,8 @@ export default function Navbar() {
           </div>
         </nav>
 
-        {/* RIGHT SIDE (DESKTOP) */}
         <div className="hidden md:block">
-          {!session ? (
+          {!isLoggedIn ? (
             <Link
               to="/login"
               className="
@@ -275,23 +336,34 @@ export default function Navbar() {
                 className="flex items-center gap-3 rounded-full bg-white px-3 py-2 shadow border border-[#E5D5C0]
                            hover:brightness-95 transition"
               >
-                {/* PP BULAT */}
                 <div className="w-9 h-9 rounded-full overflow-hidden border border-[#D9C3AF] bg-white flex-shrink-0">
-                  <img src={avatarSrc} alt="avatar" className="w-full h-full object-cover" />
+                  <img
+                    src={avatarSrc}
+                    alt="avatar"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
 
                 <div className="font-semibold text-[#6B4423] max-w-[140px] truncate">
-                  {me?.name || "User"}
+                  {meLoading ? "Memuat..." : me?.name || "User"}
                 </div>
 
                 <ChevronDown rotated={openUser} />
               </button>
 
               <Dropdown open={openUser} align="right">
-                <button type="button" className="dropdown-item" onClick={() => goPage("/profile/settings")}>
+                <button
+                  type="button"
+                  className="dropdown-item"
+                  onClick={() => goPage("/profile/settings")}
+                >
                   Settings Profile
                 </button>
-                <button type="button" className="dropdown-item text-red-600" onClick={handleLogout}>
+                <button
+                  type="button"
+                  className="dropdown-item text-red-600"
+                  onClick={handleLogout}
+                >
                   Logout
                 </button>
               </Dropdown>
@@ -300,7 +372,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* MOBILE MENU */}
       <div
         className={[
           "md:hidden",
@@ -310,7 +381,13 @@ export default function Navbar() {
         ].join(" ")}
       >
         <div className="px-6 py-4 space-y-2">
-          <button type="button" onClick={goHome} className={`mobile-link ${isActivePath("/") ? "mobile-active" : ""}`}>
+          <button
+            type="button"
+            onClick={goHome}
+            className={`mobile-link ${
+              isActivePath("/") ? "mobile-active" : ""
+            }`}
+          >
             Beranda
           </button>
 
@@ -333,16 +410,32 @@ export default function Navbar() {
                 openCariMobile ? "max-h-60 opacity-100" : "max-h-0 opacity-0",
               ].join(" ")}
             >
-              <button type="button" className="mobile-sub" onClick={() => goToSection("pilihan-kost")}>
+              <button
+                type="button"
+                className="mobile-sub"
+                onClick={() => goToSection("pilihan-kost")}
+              >
                 Pilihan Kost
               </button>
-              <button type="button" className="mobile-sub" onClick={() => goToSection("rekomendasi-kost")}>
+              <button
+                type="button"
+                className="mobile-sub"
+                onClick={() => goToSection("rekomendasi-kost")}
+              >
                 Rekomendasi Kost
               </button>
-              <button type="button" className="mobile-sub" onClick={() => goToSection("kost-kampus")}>
+              <button
+                type="button"
+                className="mobile-sub"
+                onClick={() => goToSection("kost-kampus")}
+              >
                 Kost Area Kampus
               </button>
-              <button type="button" className="mobile-sub" onClick={() => goToSection("kost-hemat")}>
+              <button
+                type="button"
+                className="mobile-sub"
+                onClick={() => goToSection("kost-hemat")}
+              >
                 Kost Hemat
               </button>
             </div>
@@ -351,7 +444,9 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => goPage("/kontak")}
-            className={`mobile-link ${isActivePath("/kontak") ? "mobile-active" : ""}`}
+            className={`mobile-link ${
+              isActivePath("/kontak") ? "mobile-active" : ""
+            }`}
           >
             Kontak
           </button>
@@ -372,23 +467,43 @@ export default function Navbar() {
             <div
               className={[
                 "pl-3 mt-1 space-y-1 overflow-hidden transition-all duration-200",
-                openLainnyaMobile ? "max-h-60 opacity-100" : "max-h-0 opacity-0",
+                openLainnyaMobile
+                  ? "max-h-60 opacity-100"
+                  : "max-h-0 opacity-0",
               ].join(" ")}
             >
-              <button type="button" className={`mobile-sub ${isActivePath("/bantuan") ? "mobile-sub-active" : ""}`} onClick={() => goPage("/bantuan")}>
+              <button
+                type="button"
+                className={`mobile-sub ${
+                  isActivePath("/bantuan") ? "mobile-sub-active" : ""
+                }`}
+                onClick={() => goPage("/bantuan")}
+              >
                 Pusat Bantuan
               </button>
-              <button type="button" className={`mobile-sub ${isActivePath("/privasi") ? "mobile-sub-active" : ""}`} onClick={() => goPage("/privasi")}>
+              <button
+                type="button"
+                className={`mobile-sub ${
+                  isActivePath("/privasi") ? "mobile-sub-active" : ""
+                }`}
+                onClick={() => goPage("/privasi")}
+              >
                 Kebijakan Privasi
               </button>
-              <button type="button" className={`mobile-sub ${isActivePath("/syarat") ? "mobile-sub-active" : ""}`} onClick={() => goPage("/syarat")}>
+              <button
+                type="button"
+                className={`mobile-sub ${
+                  isActivePath("/syarat") ? "mobile-sub-active" : ""
+                }`}
+                onClick={() => goPage("/syarat")}
+              >
                 Syarat &amp; Ketentuan
               </button>
             </div>
           </div>
 
           <div className="pt-3">
-            {!session ? (
+            {!isLoggedIn ? (
               <Link
                 to="/login"
                 className="
@@ -461,6 +576,7 @@ export default function Navbar() {
         .dropdown-item:hover { background: #f9fafb; color: #0f172a; }
         .dropdown-active { background: #f3f4f6; color: #0f172a; }
 
+
         .mobile-link{
           width:100%;
           text-align:left;
@@ -472,6 +588,7 @@ export default function Navbar() {
         }
         .mobile-link:hover{ background:#E5D5C0; color:#6B4423; }
         .mobile-active{ color:#6B4423; background:#E5D5C0; }
+
 
         .mobile-sub{
           width:100%;
@@ -490,7 +607,15 @@ export default function Navbar() {
   );
 }
 
-/* ===== helpers ===== */
+function readLocalUser() {
+  try {
+    const raw = localStorage.getItem("paw_user");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 function Dropdown({ open, align, children }) {
   return (
@@ -500,7 +625,9 @@ function Dropdown({ open, align, children }) {
         align === "right" ? "right-0" : "left-0",
         "w-56 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden",
         "transition-all duration-200 origin-top",
-        open ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-1 pointer-events-none",
+        open
+          ? "opacity-100 scale-100 translate-y-0"
+          : "opacity-0 scale-95 -translate-y-1 pointer-events-none",
       ].join(" ")}
     >
       {children}
@@ -525,16 +652,38 @@ function ChevronDown({ rotated }) {
 
 function IconHamburger() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M4 6h16M4 12h16M4 18h16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function IconX() {
   return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M6 6l12 12M18 6L6 18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

@@ -25,7 +25,6 @@ export default function Privasi() {
           mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
         ].join(" ")}
       >
-        {/* HEADER (CREAM BOX) */}
         <section
           className="
             rounded-2xl
@@ -46,7 +45,6 @@ export default function Privasi() {
           </p>
         </section>
 
-        {/* CONTENT */}
         <section className="space-y-6">
           <PolicyItem
             icon={Database}
@@ -73,7 +71,6 @@ export default function Privasi() {
           />
         </section>
 
-        {/* FOOT NOTE */}
         <section className="rounded-2xl border border-[#E6D5BC] bg-white p-6">
           <p className="text-sm text-[#8B6F47] leading-relaxed">
             Dengan menggunakan layanan PAWKOST, kamu dianggap telah membaca,
@@ -112,12 +109,8 @@ function PolicyItem({ icon: Icon, title, content }) {
         </div>
 
         <div className="space-y-1">
-          <h3 className="font-medium text-[#6B4423] leading-snug">
-            {title}
-          </h3>
-          <p className="text-sm text-[#8B6F47] leading-relaxed">
-            {content}
-          </p>
+          <h3 className="font-medium text-[#6B4423] leading-snug">{title}</h3>
+          <p className="text-sm text-[#8B6F47] leading-relaxed">{content}</p>
         </div>
       </div>
     </div>

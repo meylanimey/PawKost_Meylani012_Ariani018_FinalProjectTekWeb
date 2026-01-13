@@ -24,27 +24,25 @@ export default function Syarat() {
           mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
         ].join(" ")}
       >
-       {/* HEADER */}
-<section
-  className="
+        <section
+          className="
     rounded-2xl
     border border-[#E6D5BC]
     bg-[#FFF7ED]
     p-6
     space-y-3
   "
->
-  <h1 className="text-2xl md:text-3xl font-medium text-[#6B4423]">
-    Syarat dan Ketentuan PAWKOST
-  </h1>
-  <p className="text-[#8B6F47] leading-relaxed">
-    Dengan mengakses dan menggunakan PAWKOST, pengguna dianggap telah
-    membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang
-    berlaku.
-  </p>
-</section>
+        >
+          <h1 className="text-2xl md:text-3xl font-medium text-[#6B4423]">
+            Syarat dan Ketentuan PAWKOST
+          </h1>
+          <p className="text-[#8B6F47] leading-relaxed">
+            Dengan mengakses dan menggunakan PAWKOST, pengguna dianggap telah
+            membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang
+            berlaku.
+          </p>
+        </section>
 
-        {/* CONTENT */}
         <section className="space-y-6">
           <TermItem
             icon={FileText}
@@ -77,7 +75,6 @@ export default function Syarat() {
           />
         </section>
 
-        {/* FOOT NOTE */}
         <section className="rounded-2xl border border-[#E6D5BC] bg-white p-6">
           <p className="text-sm text-[#8B6F47] leading-relaxed">
             Jika kamu memiliki pertanyaan terkait Syarat & Ketentuan ini, kamu
@@ -102,7 +99,6 @@ function TermItem({ icon: Icon, title, content }) {
       "
     >
       <div className="flex items-start gap-4">
-        {/* ICON */}
         <div
           className="
             flex items-center justify-center
@@ -116,14 +112,9 @@ function TermItem({ icon: Icon, title, content }) {
           <Icon className="w-6 h-6 text-[#6B4423]" />
         </div>
 
-        {/* TEXT */}
         <div className="space-y-1">
-          <h3 className="font-medium text-[#6B4423] leading-snug">
-            {title}
-          </h3>
-          <p className="text-sm text-[#8B6F47] leading-relaxed">
-            {content}
-          </p>
+          <h3 className="font-medium text-[#6B4423] leading-snug">{title}</h3>
+          <p className="text-sm text-[#8B6F47] leading-relaxed">{content}</p>
         </div>
       </div>
     </div>

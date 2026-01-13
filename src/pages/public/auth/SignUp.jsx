@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signup } from "@/lib/auth";
+import { USERS_ENDPOINT } from "@/api/mockapi";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -27,9 +27,21 @@ export default function Signup() {
     setTimeout(() => navigate(path), 260);
   };
 
+  const normalizePhone = (raw) => String(raw || "").replace(/\D/g, "");
+  const safeTrim = (v) => String(v ?? "").trim();
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setErr("");
+
+    const nameV = safeTrim(name);
+    const emailV = safeTrim(email).toLowerCase();
+    const phoneV = normalizePhone(phone);
+
+    if (!nameV || !emailV || !phoneV || !password) {
+      setErr("Semua field wajib diisi.");
+      return;
+    }
 
     if (password !== confirm) {
       setErr("Konfirmasi kata sandi tidak cocok.");
@@ -38,7 +50,46 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      signup({ name, phone, email, password, role: "user" });
+
+      try {
+        const checkRes = await fetch(USERS_ENDPOINT);
+        if (checkRes.ok) {
+          const list = await checkRes.json();
+          const exists = Array.isArray(list)
+            ? list.some((u) => String(u?.email || "").toLowerCase() === emailV)
+            : false;
+
+          if (exists) {
+            setErr("Email sudah terdaftar. Silakan gunakan email lain.");
+            return;
+          }
+        }
+      } catch {}
+
+      const payload = {
+        name: nameV,
+        phone: phoneV,
+        email: emailV,
+        password: String(password),
+        role: "user",
+        status: "Aktif",
+        avatar: "",
+        createdAt: new Date().toISOString(),
+      };
+
+      const res = await fetch(USERS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Gagal daftar. (${res.status}) ${text}`);
+      }
+
+      await res.json();
+
       navigate("/", { replace: true });
       setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
     } catch (e2) {
@@ -51,14 +102,12 @@ export default function Signup() {
   return (
     <main className="min-h-screen bg-white overflow-hidden">
       <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-        {/* LEFT: ILUSTRASI */}
         <section className="relative hidden lg:block overflow-hidden bg-[#F7EEDB]">
           <div className="absolute -left-16 -bottom-16 h-56 w-56 rounded-full bg-[#C6A892]/70" />
           <div className="absolute -right-10 -top-10 h-44 w-44 rounded-full bg-[#C6A892]/70" />
 
           <div className="absolute inset-0 flex items-center justify-center p-12">
             <div className="relative w-[520px] h-[520px]">
-              {/* BAYANGAN DUDUK (DIGESER KE BAWAH, BUKAN KE KIRI) */}
               <div
                 className="
                   absolute
@@ -75,7 +124,6 @@ export default function Signup() {
                 }}
               />
 
-              {/* bayangan kecil tambahan (ikut TURUN juga) */}
               <div
                 className="
                   absolute
@@ -107,12 +155,13 @@ export default function Signup() {
           </div>
         </section>
 
-        {/* RIGHT: FORM */}
         <section className="relative flex items-center justify-center bg-white px-5 sm:px-8 py-10">
           <div
             className={[
               "w-full max-w-md transition-all duration-500 ease-out",
-              mounted && !leaving ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2",
+              mounted && !leaving
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-2",
               leaving ? "opacity-0 -translate-y-1" : "",
             ].join(" ")}
           >
@@ -121,12 +170,11 @@ export default function Signup() {
             </h1>
 
             {err && (
-              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 whitespace-pre-line">
                 {err}
               </div>
             )}
 
-            {/* SCROLL AREA (ANTI KE POTONG) */}
             <div
               className="
                 max-h-[calc(100vh-180px)]
@@ -223,7 +271,6 @@ export default function Signup() {
             </div>
           </div>
 
-          {/* STYLE */}
           <style>{`
             .auth-scroll::-webkit-scrollbar { width: 8px; }
             .auth-scroll::-webkit-scrollbar-thumb {
@@ -231,6 +278,7 @@ export default function Signup() {
               border-radius: 999px;
             }
             .auth-scroll::-webkit-scrollbar-track { background: transparent; }
+
 
             .input-auth {
               width: 100%;
@@ -243,6 +291,7 @@ export default function Signup() {
               outline: none;
               border: 1px solid rgba(0,0,0,0.05);
             }
+
 
             .input-auth:focus {
               border-color: rgba(0,0,0,0.15);
@@ -257,7 +306,9 @@ export default function Signup() {
 function Field({ label, children }) {
   return (
     <div className="space-y-2">
-      <label className="block text-[18px] font-semibold text-[#8B6F5C]">{label}</label>
+      <label className="block text-[18px] font-semibold text-[#8B6F5C]">
+        {label}
+      </label>
       {children}
     </div>
   );
