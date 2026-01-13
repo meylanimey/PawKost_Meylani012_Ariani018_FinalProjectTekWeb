@@ -1,103 +1,316 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-
-
-import logo from "../../assets/logo.png";
-import avatar from "../../assets/avatar.png";
-
-
-import homeIcon from "../../assets/icons/home.png";
-import plusIcon from "../../assets/icons/plus.png";
-import logoutIcon from "../../assets/icons/logout.png";
-
-
-const navItemClass = ({ isActive }) =>
-  [
-    "flex items-center gap-3 px-4 py-3 rounded-xl transition active:scale-[0.99]",
-    "text-[#734128] text-sm font-semibold",
-    isActive ? "bg-white shadow-sm" : "hover:bg-white/60",
-  ].join(" ");
-
+import {
+  House,
+  NotebookPen,
+  SquarePlus,
+  Users,
+  LogOut,
+  Menu,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { USERS_ENDPOINT } from "@/api/mockapi";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const [openMobile, setOpenMobile] = useState(false);
 
+  const [admin, setAdmin] = useState(() => readLocalAdmin());
+  const [adminLoading, setAdminLoading] = useState(true);
 
-  const handleLogout = () => {
-    navigate("/", { replace: true });
+  const abortRef = useRef(null);
+
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 640) setOpenMobile(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
+    if (!isLoggedIn) {
+      navigate("/admin/login", { replace: true });
+      return;
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
+    if (!isLoggedIn) {
+      setAdminLoading(false);
+      return;
+    }
+
+    const local = readLocalAdmin();
+    setAdmin(local);
+
+    const localId = local?.id ? String(local.id) : "";
+    const usernameKey = String(localStorage.getItem("admin_username") || "")
+      .trim()
+      .toLowerCase();
+
+    if (!localId && !usernameKey) {
+      doLogout(true);
+      return;
+    }
+
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    (async () => {
+      setAdminLoading(true);
+      try {
+        let fresh = null;
+
+        if (localId) {
+          const res = await fetch(`${USERS_ENDPOINT}/${localId}`, {
+            signal: controller.signal,
+          });
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(`Gagal memuat admin. (${res.status}) ${text}`);
+          }
+          fresh = await res.json();
+        } else {
+          const res = await fetch(USERS_ENDPOINT, {
+            signal: controller.signal,
+          });
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(`Gagal memuat admin. (${res.status}) ${text}`);
+          }
+          const list = await res.json();
+          const arr = Array.isArray(list) ? list : [];
+
+          fresh = arr.find((u) => {
+            const uUsername = String(u?.username || "").toLowerCase();
+            const uEmail = String(u?.email || "").toLowerCase();
+            const uName = String(u?.name || u?.nama || "").toLowerCase();
+            return (
+              uUsername === usernameKey ||
+              uEmail === usernameKey ||
+              uName === usernameKey
+            );
+          });
+        }
+
+        const role = String(fresh?.role || "").toLowerCase();
+        if (role !== "admin") {
+          doLogout(true);
+          return;
+        }
+
+        const normalized = {
+          id: fresh?.id,
+          name: fresh?.name ?? fresh?.nama ?? "Admin",
+          email: fresh?.email ?? "",
+          username: fresh?.username ?? "",
+          role: fresh?.role ?? "admin",
+          avatar: fresh?.avatar ?? "",
+        };
+
+        setAdmin(normalized);
+        localStorage.setItem("paw_admin", JSON.stringify(normalized));
+      } catch (e) {
+        if (e?.name === "AbortError") return;
+        const fallback = readLocalAdmin();
+        if (!fallback?.id && !fallback?.name) doLogout(true);
+      } finally {
+        setAdminLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
+  }, []);
+
+  const avatarSrc = useMemo(
+    () => (admin?.avatar ? admin.avatar : "/avatar.png"),
+    [admin?.avatar]
+  );
+
+  const adminName = useMemo(() => admin?.name || "Admin", [admin?.name]);
+
+  const doLogout = (silent = false) => {
+    if (abortRef.current) abortRef.current.abort();
+
+    localStorage.removeItem("admin_logged_in");
+    localStorage.removeItem("admin_username");
+    localStorage.removeItem("paw_admin");
+
+    setOpenMobile(false);
+
+    if (!silent) {
+      navigate("/", { replace: true });
+    } else {
+      navigate("/admin/login", { replace: true });
+    }
   };
 
+  const SidebarInner = ({ isMobile = false }) => (
+    <div
+      className="w-full overflow-hidden"
+      style={{
+        height: 550,
+        backgroundColor: "#EEEBE6",
+        borderRadius: 30,
+        padding: 16,
+        border: "1px solid #E5D5C0",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
+      }}
+    >
+      <div className="flex flex-col items-center text-center">
+        <img
+          src={avatarSrc}
+          alt="avatar"
+          className="h-16 w-16 rounded-full border-2 border-[#734128] bg-white object-cover"
+        />
+        <div className="mt-2 text-[15px] font-bold text-[#734128]">
+          {adminLoading ? "Memuat..." : adminName}
+        </div>
+        <div className="text-[11px] font-medium text-[#734128]">
+          Admin PawKost
+        </div>
+      </div>
+
+      <div className="mt-5 space-y-2">
+        <SidebarLink
+          to="/admin"
+          icon={<House size={18} className="text-[#734128]" />}
+          label="Dashboard"
+          onClick={() => isMobile && setOpenMobile(false)}
+        />
+        <SidebarLink
+          to="/admin/kost"
+          icon={<NotebookPen size={18} className="text-[#734128]" />}
+          label="Kelola Kost"
+          onClick={() => isMobile && setOpenMobile(false)}
+        />
+        <SidebarLink
+          to="/admin/kost/tambah"
+          icon={<SquarePlus size={18} className="text-[#734128]" />}
+          label="Tambah Kost"
+          onClick={() => isMobile && setOpenMobile(false)}
+        />
+        <SidebarLink
+          to="/admin/users"
+          icon={<Users size={18} className="text-[#734128]" />}
+          label="Daftar User"
+          onClick={() => isMobile && setOpenMobile(false)}
+        />
+
+        <button
+          type="button"
+          onClick={() => doLogout(false)}
+          className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-bold text-[#734128] bg-transparent hover:bg-white/50 transition"
+        >
+          <LogOut size={18} className="text-[#734128]" />
+          Logout
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="relative w-full bg-[#E7DCC6] px-6 py-3 shadow-sm">
-        <div className="flex items-end leading-none">
-          <img
-            src={logo}
-            alt="PAWKOST"
-            className="h-[35px] w-[45px] object-contain scale-165"
-          />
-          <span className="text-[45px] font-extrabold tracking-tight text-[#6F4417]">
-            PAW
-          </span>
-          <span className="text-[45px] font-medium tracking-tight text-[#8F6753]">
-            KOST
-          </span>
+      <header className="bg-[#EFE4D0] border-b border-[#E5D5C0] shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => navigate("/admin")}
+            className="flex items-center gap-2"
+          >
+            <img
+              src="/logo-pawkost.png"
+              alt="PAWKOST"
+              className="w-14 h-14 object-contain"
+            />
+            <div className="flex items-baseline">
+              <span className="text-3xl font-bold text-[#6F4417]">PAW</span>
+              <span className="text-3xl font-normal text-[#8F6753]">KOST</span>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setOpenMobile(true)}
+            className="sm:hidden inline-flex items-center justify-center h-10 w-10 rounded-xl bg-white/70 hover:bg-white transition border border-[#E5D5C0]"
+            aria-label="Open menu"
+          >
+            <Menu className="text-[#734128]" />
+          </button>
         </div>
       </header>
 
+      <aside
+        className="hidden sm:block fixed z-40"
+        style={{ left: 14, top: 93, width: 240, height: 550 }}
+      >
+        <SidebarInner />
+      </aside>
 
-      <div className="flex min-h-[calc(100vh-64px)]">
-        <aside className="w-[265px] bg-white px-5 py-6">
-          <div className="flex h-[calc(100vh-130px)] flex-col rounded-[28px] bg-[#EFEAE2] px-5 py-6">
-            <div className="mb-6 flex flex-col items-center gap-2 text-center">
-              <img
-                src={avatar}
-                alt="Admin"
-                className="h-14 w-14 rounded-full bg-white object-cover"
-              />
-              <div>
-                <p className="text-sm font-extrabold text-[#734128]">Armey</p>
-                <p className="text-[11px] text-[#734128]/70">Admin PawKost</p>
-              </div>
+      {openMobile && (
+        <div className="sm:hidden fixed inset-0 z-50">
+          <button
+            type="button"
+            aria-label="Close backdrop"
+            onClick={() => setOpenMobile(false)}
+            className="absolute inset-0 bg-black/35"
+          />
+
+          <div className="absolute left-3 top-[5.75px] w-[17.5px]">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenMobile(false)}
+                className="absolute -right-3 -top-3 h-10 w-10 rounded-full bg-white border border-[#E5D5C0] shadow flex items-center justify-center"
+                aria-label="Close menu"
+              >
+                <X className="text-[#734128]" size={20} />
+              </button>
+              <SidebarInner isMobile />
             </div>
-
-
-            <nav className="space-y-2">
-              <NavLink to="/admin" end className={navItemClass}>
-                <img src={homeIcon} alt="" className="h-5 w-5 object-contain" />
-                Dashboard
-              </NavLink>
-
-
-              <NavLink to="/admin/add" className={navItemClass}>
-                <img src={plusIcon} alt="" className="h-5 w-5 object-contain" />
-                Tambah Kost
-              </NavLink>
-            </nav>
-
-
-            <div className="flex-1" />
-
-
-            <button
-              type="button"
-              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-[#734128] hover:bg-white/60 active:scale-[0.99]"
-              onClick={handleLogout}
-            >
-              <img src={logoutIcon} alt="" className="h-5 w-5 object-contain" />
-              Keluar
-            </button>
           </div>
-        </aside>
+        </div>
+      )}
 
-
-        <main className="flex-1 px-10 py-8">
+      <main className="px-4 py-4 sm:px-0 sm:py-0 sm:ml-[278px] sm:pt-6">
+        <div className="sm:pr-6 sm:pl-0">
           <Outlet />
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
 
+function SidebarLink({ to, icon, label, onClick }) {
+  return (
+    <NavLink
+      to={to}
+      end={to === "/admin"}
+      onClick={onClick}
+      className={({ isActive }) =>
+        [
+          "flex items-center gap-3 rounded-2xl px-4 py-3 transition",
+          "text-[15px] font-bold text-[#734128]",
+          isActive ? "bg-white shadow-sm" : "hover:bg-white/60",
+        ].join(" ")
+      }
+    >
+      {icon}
+      <span>{label}</span>
+    </NavLink>
+  );
+}
 
-
+function readLocalAdmin() {
+  try {
+    const raw = localStorage.getItem("paw_admin");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
