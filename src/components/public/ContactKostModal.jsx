@@ -1,6 +1,32 @@
 import { useEffect, useMemo, useState } from "react";
-import { X, MessageCircle, Sparkles, ChevronRight } from "lucide-react";
+import { X, MessageCircle, ChevronRight } from "lucide-react";
 
+function formatRupiah(num) {
+  const n = Number(String(num ?? 0).replace(/[^\d]/g, "")) || 0;
+  return n.toLocaleString("id-ID");
+}
+
+function normalizePhone(raw) {
+  let s = String(raw ?? "").replace(/\D/g, "");
+  if (s.startsWith("0")) s = `62${s.slice(1)}`;
+  return s;
+}
+
+function getNama(k) {
+  return k?.nama ?? k?.name ?? k?.namaKost ?? "Nama kost";
+}
+function getLokasi(k) {
+  return k?.lokasi ?? k?.location ?? k?.alamat ?? "-";
+}
+function getDaerah(k) {
+  return k?.daerah ?? "-";
+}
+function getTipe(k) {
+  return k?.jenis ?? k?.type ?? "-";
+}
+function getHarga(k) {
+  return k?.harga ?? k?.price ?? 0;
+}
 
 const DEFAULT_TEMPLATES = [
   {
@@ -8,119 +34,229 @@ const DEFAULT_TEMPLATES = [
     label: "Saya butuh cepat. Bisa booking sekarang?",
     tag: "Booking",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini dan ingin booking sekarang.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\nTipe: ${kost.type}\nHarga: Rp ${Number(kost.price || 0).toLocaleString(
-        "id-ID"
-      )} / Bulan\n\nApakah masih tersedia?`,
+      [
+        "Halo, saya tertarik dengan kost ini dan ingin booking sekarang.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        `Tipe: ${getTipe(kost)}`,
+        `Harga: Rp ${formatRupiah(getHarga(kost))} / bulan`,
+        "",
+        "Apakah masih tersedia?",
+      ].join("\n"),
   },
   {
     id: "alamat",
     label: "Boleh minta alamat lengkap & patokannya?",
     tag: "Lokasi",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nBoleh minta alamat lengkap dan patokannya?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Boleh minta alamat lengkap dan patokannya?",
+      ].join("\n"),
   },
   {
     id: "survei",
     label: "Saya ingin survei dulu. Bisa hari ini / besok?",
     tag: "Survey",
     build: (kost) =>
-      `Halo, saya ingin survei kost ini dulu.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nApakah bisa survei hari ini atau besok?`,
+      [
+        "Halo, saya ingin survei kost ini dulu.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Apakah bisa survei hari ini atau besok?",
+      ].join("\n"),
   },
   {
     id: "kamar",
     label: "Masih ada kamar kosong? Tipe apa saja?",
     tag: "Ketersediaan",
     build: (kost) =>
-      `Halo, apakah masih ada kamar tersedia?\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\nTipe: ${kost.type}\n\nKalau ada, boleh info tipe kamar & ketentuannya?`,
+      [
+        "Halo, apakah masih ada kamar tersedia?",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        `Tipe: ${getTipe(kost)}`,
+        "",
+        "Kalau ada, boleh info tipe kamar & ketentuannya?",
+      ].join("\n"),
   },
   {
     id: "aturan",
     label: "Boleh tanya aturan & fasilitas detailnya?",
     tag: "Aturan",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nBoleh info aturan kost dan fasilitas detailnya?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Boleh info aturan kost dan fasilitas detailnya?",
+      ].join("\n"),
   },
-
-
   {
     id: "harga-net",
     label: "Harga net berapa? Ada biaya tambahan?",
     tag: "Harga",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nHarga Rp ${Number(kost.price || 0).toLocaleString(
-        "id-ID"
-      )}/bulan itu sudah termasuk apa saja? (listrik/air/WiFi/parkir)\nAda biaya tambahan/deposit?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        `Harga Rp ${formatRupiah(
+          getHarga(kost)
+        )}/bulan itu sudah termasuk apa saja? (listrik/air/WiFi/parkir)`,
+        "Ada biaya tambahan/deposit?",
+      ].join("\n"),
   },
   {
     id: "deposit",
     label: "Deposit berapa? Refundable?",
     tag: "Pembayaran",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nBoleh info deposit/uang jaminan berapa, dan apakah refundable saat check-out?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Boleh info deposit/uang jaminan berapa, dan apakah refundable saat check-out?",
+      ].join("\n"),
   },
   {
     id: "minimum",
     label: "Minimal sewa berapa bulan?",
     tag: "Sewa",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nMinimal sewa berapa bulan? Bisa sewa bulanan atau harus 3/6/12 bulan?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Minimal sewa berapa bulan? Bisa sewa bulanan atau harus 3/6/12 bulan?",
+      ].join("\n"),
   },
   {
     id: "listrik",
     label: "Listrik token/prabayar atau include?",
     tag: "Fasilitas",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nUntuk listrik sistemnya bagaimana? Include atau token/prabayar? Daya listrik per kamar berapa?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Untuk listrik sistemnya bagaimana? Include atau token/prabayar? Daya listrik per kamar berapa?",
+      ].join("\n"),
   },
   {
     id: "wifi",
     label: "WiFi tersedia? Kecepatan & jam aktifnya?",
     tag: "Fasilitas",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nApakah tersedia WiFi? Kira-kira kecepatannya berapa Mbps dan stabil tidak?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Apakah tersedia WiFi? Kira-kira kecepatannya berapa Mbps dan stabil tidak?",
+      ].join("\n"),
   },
   {
     id: "parkir",
     label: "Parkir motor/mobil tersedia? Biayanya?",
     tag: "Parkir",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nParkir motor/mobil tersedia? Ada biaya tambahan atau include?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Parkir motor/mobil tersedia? Ada biaya tambahan atau include?",
+      ].join("\n"),
   },
   {
     id: "jam-bertamu",
     label: "Jam bertamu & aturan tamu bagaimana?",
     tag: "Aturan",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nAturan tamu bagaimana? Jam bertamu sampai jam berapa? Boleh menginap atau tidak?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Aturan tamu bagaimana? Jam bertamu sampai jam berapa? Boleh menginap atau tidak?",
+      ].join("\n"),
   },
   {
     id: "pet",
     label: "Boleh bawa hewan peliharaan?",
     tag: "Aturan",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nApakah diperbolehkan membawa hewan peliharaan? Jika boleh, ada syarat tertentu?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Apakah diperbolehkan membawa hewan peliharaan? Jika boleh, ada syarat tertentu?",
+      ].join("\n"),
   },
   {
     id: "foto-video",
     label: "Boleh minta foto/video kamar yang tersedia?",
     tag: "Media",
     build: (kost) =>
-      `Halo, saya tertarik dengan kost ini.\n\nNama kost: ${kost.name}\nLokasi: ${kost.location}\n\nBoleh minta foto/video kamar yang sedang tersedia + kamar mandi dan area dapur/parkir?`,
+      [
+        "Halo, saya tertarik dengan kost ini.",
+        "",
+        `Nama kost: ${getNama(kost)}`,
+        `Daerah: ${getDaerah(kost)}`,
+        `Lokasi: ${getLokasi(kost)}`,
+        "",
+        "Boleh minta foto/video kamar yang sedang tersedia + kamar mandi dan area dapur/parkir?",
+      ].join("\n"),
   },
 ];
-
 
 export default function ContactKostModal({
   open,
   onClose,
   kost,
-  waNumber = "6281200000000",
+  waNumber = "",
   templates = DEFAULT_TEMPLATES,
 }) {
   const [selectedId, setSelectedId] = useState(templates?.[0]?.id || "booking");
   const [mounted, setMounted] = useState(false);
   const [q, setQ] = useState("");
-
 
   useEffect(() => {
     if (!open) return;
@@ -129,27 +265,22 @@ export default function ContactKostModal({
     setQ("");
   }, [open, templates]);
 
-
   useEffect(() => {
     if (!open) return;
 
-
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
 
     const onKey = (e) => {
       if (e.key === "Escape") onClose?.();
     };
     window.addEventListener("keydown", onKey);
 
-
     return () => {
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKey);
     };
   }, [open, onClose]);
-
 
   const filteredTemplates = useMemo(() => {
     const s = (q || "").trim().toLowerCase();
@@ -160,27 +291,30 @@ export default function ContactKostModal({
     });
   }, [templates, q]);
 
-
   const selected = useMemo(() => {
     const hit = templates.find((t) => t.id === selectedId);
     return hit || templates[0];
   }, [templates, selectedId]);
-
 
   const messageText = useMemo(() => {
     if (!kost || !selected?.build) return "";
     return selected.build(kost);
   }, [kost, selected]);
 
+  const finalWa = useMemo(() => {
+    const fromProp = normalizePhone(waNumber);
+    if (fromProp) return fromProp;
+    const fromKost = normalizePhone(kost?.nomorPemilik);
+    return fromKost || "";
+  }, [waNumber, kost]);
 
   const waLink = useMemo(() => {
+    if (!finalWa) return "#";
     const txt = encodeURIComponent(messageText || "");
-    return `https://wa.me/${waNumber}?text=${txt}`;
-  }, [waNumber, messageText]);
-
+    return `https://wa.me/${finalWa}?text=${txt}`;
+  }, [finalWa, messageText]);
 
   if (!open) return null;
-
 
   return (
     <div className="fixed inset-0 z-[999]">
@@ -192,7 +326,6 @@ export default function ContactKostModal({
         ].join(" ")}
         onClick={onClose}
       />
-
 
       <div className="absolute inset-0 grid place-items-center p-4">
         <div
@@ -210,16 +343,13 @@ export default function ContactKostModal({
           <div className="rounded-[27px] bg-white">
             <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-gray-100">
               <div className="min-w-0">
-                <div className="inline-flex items-center gap-2">
-                  <h3 className="text-lg md:text-xl font-semibold text-gray-900">
-                    Tanya Pemilik Kost
-                  </h3>
-                </div>
+                <h3 className="text-lg md:text-xl font-semibold text-gray-900">
+                  Tanya Pemilik Kost
+                </h3>
                 <p className="mt-1 text-sm text-gray-600">
                   Pilih pertanyaan, lihat preview, lalu kirim ke WhatsApp.
                 </p>
               </div>
-
 
               <button
                 type="button"
@@ -236,20 +366,21 @@ export default function ContactKostModal({
               </button>
             </div>
 
-
-            {/* Info bar */}
             <div className="px-5 pt-4">
               <div className="rounded-2xl bg-emerald-50 border border-emerald-100 px-4 py-3">
                 <p className="text-sm text-emerald-800">
                   Kamu akan terhubung ke pemilik melalui WhatsApp.
                 </p>
+                {!finalWa ? (
+                  <p className="text-xs text-amber-700 mt-1">
+                    Nomor pemilik belum tersedia. Isi <b>nomorPemilik</b> di
+                    data kost ya.
+                  </p>
+                ) : null}
               </div>
             </div>
 
-
-            {/* Body layout baru: kiri list cards + search, kanan preview sticky */}
             <div className="p-5 grid md:grid-cols-2 gap-5">
-              {/* LEFT */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-gray-900">
@@ -260,8 +391,6 @@ export default function ContactKostModal({
                   </span>
                 </div>
 
-
-                {/* search */}
                 <div className="relative">
                   <input
                     value={q}
@@ -279,14 +408,7 @@ export default function ContactKostModal({
                   </div>
                 </div>
 
-
-                {/* list style baru: card tiles */}
-                <div
-                  className="
-                    rounded-2xl border border-gray-200 bg-white
-                    overflow-hidden
-                  "
-                >
+                <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
                   <div className="max-h-[360px] overflow-auto p-2">
                     <div className="grid gap-2">
                       {filteredTemplates.map((t) => {
@@ -316,7 +438,6 @@ export default function ContactKostModal({
                                 ) : null}
                               </div>
 
-
                               {t.tag ? (
                                 <span
                                   className={[
@@ -335,7 +456,6 @@ export default function ContactKostModal({
                       })}
                     </div>
 
-
                     {filteredTemplates.length === 0 ? (
                       <div className="p-6 text-center text-sm text-gray-500">
                         Tidak ada hasil untuk pencarian:{" "}
@@ -346,8 +466,6 @@ export default function ContactKostModal({
                 </div>
               </div>
 
-
-              {/* RIGHT */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold text-gray-900">
@@ -358,30 +476,31 @@ export default function ContactKostModal({
                   </span>
                 </div>
 
-
                 <div className="rounded-2xl border border-gray-200 bg-gradient-to-b from-gray-50 to-white p-4">
                   <pre className="text-xs whitespace-pre-wrap text-gray-800 leading-relaxed">
                     {messageText}
                   </pre>
                 </div>
 
-
                 <a
                   href={waLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="
-                    inline-flex w-full items-center justify-center gap-2
-                    rounded-2xl px-5 py-3 font-semibold
-                    bg-[#25D366] text-white
-                    hover:brightness-95 transition
-                    active:scale-[0.99]
-                  "
+                  className={[
+                    "inline-flex w-full items-center justify-center gap-2",
+                    "rounded-2xl px-5 py-3 font-semibold",
+                    finalWa
+                      ? "bg-[#25D366] text-white hover:brightness-95"
+                      : "bg-gray-200 text-gray-500 cursor-not-allowed",
+                    "transition active:scale-[0.99]",
+                  ].join(" ")}
+                  onClick={(e) => {
+                    if (!finalWa) e.preventDefault();
+                  }}
                 >
                   <MessageCircle className="w-5 h-5" />
                   Kirim via WhatsApp
                 </a>
-
 
                 <button
                   type="button"
@@ -395,7 +514,6 @@ export default function ContactKostModal({
                 >
                   Batal
                 </button>
-
 
                 <p className="text-xs text-gray-500">
                   * Pesan otomatis bisa kamu edit nanti di WhatsApp sebelum

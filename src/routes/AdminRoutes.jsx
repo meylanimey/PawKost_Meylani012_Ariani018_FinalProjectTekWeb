@@ -8,16 +8,14 @@ import AddKost from "../pages/admin/AddKost";
 import EditKost from "../pages/admin/EditKost";
 import LoginAdmin from "../pages/admin/LoginAdmin";
 import DaftarUser from "../pages/admin/DaftarUser";
+import EditUser from "../pages/admin/EditUser";
 
 export default function AdminRoutes({ kosts, onAdd, onEdit, onDelete }) {
   return (
     <Routes>
-      {/* LOGIN (public) */}
       <Route path="login" element={<LoginAdmin />} />
 
-      {/* PROTECTED */}
       <Route element={<RequireAdmin />}>
-        {/* LAYOUT */}
         <Route element={<AdminLayout />}>
           <Route index element={<Dashboard kosts={kosts} />} />
           <Route
@@ -30,8 +28,8 @@ export default function AdminRoutes({ kosts, onAdd, onEdit, onDelete }) {
             element={<EditKost kosts={kosts} onEdit={onEdit} />}
           />
           <Route path="users" element={<DaftarUser />} />
+          <Route path="users/:id/edit" element={<EditUser />} />
 
-          {/* admin not found */}
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Route>
       </Route>

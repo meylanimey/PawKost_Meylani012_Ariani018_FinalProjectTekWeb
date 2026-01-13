@@ -9,7 +9,6 @@ import {
   Music2,
 } from "lucide-react";
 
-
 export default function Footer() {
   return (
     <footer className="bg-[#C4AB97] text-white">
@@ -30,14 +29,12 @@ export default function Footer() {
               </div>
             </div>
 
-
             <p className="mt-4 text-sm leading-relaxed text-white/90">
               PAWKOST membantu kamu menemukan kost sesuai kebutuhan, mulai dari
               lokasi, fasilitas, hingga harga, melalui tampilan yang simpel dan
               mudah digunakan.
             </p>
           </div>
-
 
           <div>
             <h4 className="font-semibold mb-4 text-white">Layanan</h4>
@@ -53,7 +50,6 @@ export default function Footer() {
               </li>
             </ul>
           </div>
-
 
           <div>
             <h4 className="font-semibold mb-4 text-white">Kebijakan</h4>
@@ -79,7 +75,6 @@ export default function Footer() {
             </ul>
           </div>
 
-
           <div>
             <h4 className="font-semibold mb-4 text-white">Kontak</h4>
             <ul className="space-y-3 text-sm text-white">
@@ -104,7 +99,6 @@ export default function Footer() {
                 </a>
               </li>
 
-
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-green-400" />
                 <a
@@ -116,7 +110,6 @@ export default function Footer() {
                   0895-0133-1826
                 </a>
               </li>
-
 
               <li className="flex items-center gap-2">
                 <Music2 className="w-4 h-4 text-black" />
@@ -139,6 +132,3 @@ export default function Footer() {
     </footer>
   );
 }
-
-
-

@@ -65,7 +65,6 @@ export default function Kontak() {
       <section className="mx-auto max-w-6xl px-4 pt-10 pb-6">
         <div
           className={[
-            // 👉 KOTAK ISINYA CREAM
             "relative rounded-3xl border border-gray-200 bg-[#FFF7ED]",
             "shadow-sm p-7 md:p-9",
             "transition-all duration-700 ease-out",
@@ -83,16 +82,14 @@ export default function Kontak() {
             "
           />
 
-          {/* BOLD → COKLAT TUA */}
           <h1 className="text-3xl md:text-4xl font-bold text-[#5C4033]">
             Kontak PAWKOST
           </h1>
 
-          {/* TEKS BIASA → COKLAT MUDA */}
           <p className="mt-2 max-w-2xl text-[#8B6F47]">
-            Terhubung langsung dengan PAWKOST lewat sosial media resmi atau kirim
-            pesan menggunakan form di halaman ini. Kami siap bantu kamu cari kost
-            terbaik 🐾
+            Terhubung langsung dengan PAWKOST lewat sosial media resmi atau
+            kirim pesan menggunakan form di halaman ini. Kami siap bantu kamu
+            cari kost terbaik 🐾
           </p>
         </div>
       </section>
@@ -107,12 +104,10 @@ export default function Kontak() {
         >
           <div className="space-y-4">
             <div>
-              {/* BOLD → COKLAT TUA */}
               <h2 className="text-xl font-bold text-[#5C4033]">
                 Sosial Media Resmi
               </h2>
 
-              {/* TEKS BIASA → COKLAT MUDA */}
               <p className="text-sm text-[#8B6F47] mt-1">
                 Follow atau hubungi kami lewat platform favorit kamu.
               </p>

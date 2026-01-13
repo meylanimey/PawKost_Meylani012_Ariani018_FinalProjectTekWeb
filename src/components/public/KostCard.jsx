@@ -1,14 +1,61 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-
 
 export default function KostCard({ kost }) {
   const navigate = useNavigate();
 
+  const data = useMemo(() => {
+    const id = kost?.id;
+
+    const name = kost?.nama ?? kost?.name ?? "Nama Kost";
+    const image =
+      kost?.urlGambar ??
+      kost?.gambar ??
+      kost?.image ??
+      "https://picsum.photos/seed/kostcard/600/400";
+
+    const type = kost?.jenis ?? kost?.type ?? "";
+    const location = kost?.lokasi ?? kost?.location ?? kost?.daerah ?? "-";
+
+    const facilitiesRaw = kost?.fasilitas ?? kost?.facilities ?? [];
+    const facilities = Array.isArray(facilitiesRaw)
+      ? facilitiesRaw
+      : String(facilitiesRaw)
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+
+    const priceRaw = kost?.harga ?? kost?.price ?? 0;
+    const price =
+      typeof priceRaw === "number"
+        ? priceRaw
+        : Number(String(priceRaw).replace(/[^\d]/g, "")) || 0;
+
+    const status = String(kost?.status ?? "Tersedia");
+    const isAvailable = status.toLowerCase() !== "penuh";
+
+    const isPublished = !!(kost?.isPublished ?? true);
+
+    return {
+      id,
+      name,
+      image,
+      type,
+      location,
+      facilities,
+      price,
+      status,
+      isAvailable,
+      isPublished,
+    };
+  }, [kost]);
 
   const goToDetail = () => {
-    navigate(`/detail/${kost.id}`);
+    if (data?.id == null) return;
+    navigate(`/detail/${data.id}`);
   };
 
+  if (!data.isPublished) return null;
 
   return (
     <div
@@ -31,8 +78,8 @@ export default function KostCard({ kost }) {
       <div className="p-3">
         <div className="relative overflow-hidden rounded-xl shadow">
           <img
-            src={kost.image}
-            alt={kost.name}
+            src={data.image}
+            alt={data.name}
             className="
               w-full h-48 object-cover
               transition-transform duration-500
@@ -43,15 +90,13 @@ export default function KostCard({ kost }) {
         </div>
       </div>
 
-
       <div className="px-4 pb-4 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-lg font-medium text-[#6B4423] leading-snug">
-            {kost.name}
+            {data.name}
           </h3>
 
-
-          {kost.type && (
+          {!!data.type && (
             <span
               className="
                 px-3 py-1 text-xs rounded-full
@@ -60,22 +105,26 @@ export default function KostCard({ kost }) {
                 font-medium shrink-0
               "
             >
-              {kost.type}
+              {data.type}
             </span>
           )}
         </div>
 
+        <p className="mt-1 text-sm text-[#9C7A4F]">{data.location}</p>
 
-        <p className="mt-1 text-sm text-[#9C7A4F]">{kost.location}</p>
-
-
-        <p className="mt-1 text-sm font-medium text-green-600">Tersedia</p>
-
+        <p
+          className={[
+            "mt-1 text-sm font-medium",
+            data.isAvailable ? "text-green-600" : "text-red-600",
+          ].join(" ")}
+        >
+          {data.isAvailable ? "Tersedia" : "Penuh"}
+        </p>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          {kost.facilities?.slice(0, 5).map((f, i) => (
+          {data.facilities.slice(0, 5).map((f, i) => (
             <span
-              key={i}
+              key={`${f}-${i}`}
               className="
                 px-3 py-1 text-xs rounded-full
                 bg-[#F3E6D4] text-[#8B6F47]
@@ -87,15 +136,10 @@ export default function KostCard({ kost }) {
           ))}
         </div>
 
-
         <p className="mt-4 text-lg font-medium text-[#8B4513]">
-          Rp {kost.price.toLocaleString("id-ID")}
-          <span className="text-sm font-normal text-[#6B4423]">
-            {" "}
-            / 3 bulan
-          </span>
+          Rp {data.price.toLocaleString("id-ID")}
+          <span className="text-sm font-normal text-[#6B4423]"> / bulan</span>
         </p>
-
 
         <div className="mt-auto pt-4">
           <button
@@ -120,6 +164,3 @@ export default function KostCard({ kost }) {
     </div>
   );
 }
-
-
-

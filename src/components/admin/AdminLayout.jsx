@@ -8,11 +8,17 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { USERS_ENDPOINT } from "@/api/mockapi";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const [openMobile, setOpenMobile] = useState(false);
+
+  const [admin, setAdmin] = useState(() => readLocalAdmin());
+  const [adminLoading, setAdminLoading] = useState(true);
+
+  const abortRef = useRef(null);
 
   useEffect(() => {
     const onResize = () => {
@@ -22,11 +28,125 @@ export default function AdminLayout() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const doLogout = () => {
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
+    if (!isLoggedIn) {
+      navigate("/admin/login", { replace: true });
+      return;
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("admin_logged_in") === "true";
+    if (!isLoggedIn) {
+      setAdminLoading(false);
+      return;
+    }
+
+    const local = readLocalAdmin();
+    setAdmin(local);
+
+    const localId = local?.id ? String(local.id) : "";
+    const usernameKey = String(localStorage.getItem("admin_username") || "")
+      .trim()
+      .toLowerCase();
+
+    if (!localId && !usernameKey) {
+      doLogout(true);
+      return;
+    }
+
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    (async () => {
+      setAdminLoading(true);
+      try {
+        let fresh = null;
+
+        if (localId) {
+          const res = await fetch(`${USERS_ENDPOINT}/${localId}`, {
+            signal: controller.signal,
+          });
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(`Gagal memuat admin. (${res.status}) ${text}`);
+          }
+          fresh = await res.json();
+        } else {
+          const res = await fetch(USERS_ENDPOINT, {
+            signal: controller.signal,
+          });
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(`Gagal memuat admin. (${res.status}) ${text}`);
+          }
+          const list = await res.json();
+          const arr = Array.isArray(list) ? list : [];
+
+          fresh = arr.find((u) => {
+            const uUsername = String(u?.username || "").toLowerCase();
+            const uEmail = String(u?.email || "").toLowerCase();
+            const uName = String(u?.name || u?.nama || "").toLowerCase();
+            return (
+              uUsername === usernameKey ||
+              uEmail === usernameKey ||
+              uName === usernameKey
+            );
+          });
+        }
+
+        const role = String(fresh?.role || "").toLowerCase();
+        if (role !== "admin") {
+          doLogout(true);
+          return;
+        }
+
+        const normalized = {
+          id: fresh?.id,
+          name: fresh?.name ?? fresh?.nama ?? "Admin",
+          email: fresh?.email ?? "",
+          username: fresh?.username ?? "",
+          role: fresh?.role ?? "admin",
+          avatar: fresh?.avatar ?? "",
+        };
+
+        setAdmin(normalized);
+        localStorage.setItem("paw_admin", JSON.stringify(normalized));
+      } catch (e) {
+        if (e?.name === "AbortError") return;
+        const fallback = readLocalAdmin();
+        if (!fallback?.id && !fallback?.name) doLogout(true);
+      } finally {
+        setAdminLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
+  }, []);
+
+  const avatarSrc = useMemo(
+    () => (admin?.avatar ? admin.avatar : "/avatar.png"),
+    [admin?.avatar]
+  );
+
+  const adminName = useMemo(() => admin?.name || "Admin", [admin?.name]);
+
+  const doLogout = (silent = false) => {
+    if (abortRef.current) abortRef.current.abort();
+
     localStorage.removeItem("admin_logged_in");
     localStorage.removeItem("admin_username");
+    localStorage.removeItem("paw_admin");
+
     setOpenMobile(false);
-    navigate("/", { replace: true }); // ✅ keluar ke user
+
+    if (!silent) {
+      navigate("/", { replace: true });
+    } else {
+      navigate("/admin/login", { replace: true });
+    }
   };
 
   const SidebarInner = ({ isMobile = false }) => (
@@ -43,11 +163,13 @@ export default function AdminLayout() {
     >
       <div className="flex flex-col items-center text-center">
         <img
-          src="/avatar.png"
+          src={avatarSrc}
           alt="avatar"
-          className="h-16 w-16 rounded-full border-2 border-[#734128] bg-white"
+          className="h-16 w-16 rounded-full border-2 border-[#734128] bg-white object-cover"
         />
-        <div className="mt-2 text-[15px] font-bold text-[#734128]">Armey</div>
+        <div className="mt-2 text-[15px] font-bold text-[#734128]">
+          {adminLoading ? "Memuat..." : adminName}
+        </div>
         <div className="text-[11px] font-medium text-[#734128]">
           Admin PawKost
         </div>
@@ -81,7 +203,7 @@ export default function AdminLayout() {
 
         <button
           type="button"
-          onClick={doLogout}
+          onClick={() => doLogout(false)}
           className="w-full flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-bold text-[#734128] bg-transparent hover:bg-white/50 transition"
         >
           <LogOut size={18} className="text-[#734128]" />
@@ -181,4 +303,14 @@ function SidebarLink({ to, icon, label, onClick }) {
       <span>{label}</span>
     </NavLink>
   );
+}
+
+function readLocalAdmin() {
+  try {
+    const raw = localStorage.getItem("paw_admin");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }

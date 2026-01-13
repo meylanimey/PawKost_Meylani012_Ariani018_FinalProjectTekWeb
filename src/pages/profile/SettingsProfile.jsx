@@ -1,84 +1,150 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getCurrentUser, updateCurrentUser } from "@/lib/auth";
+import { USERS_ENDPOINT } from "@/api/mockapi";
 
 export default function SettingsProfile() {
   const navigate = useNavigate();
-  const fileRef = useRef(null);
+  const abortRef = useRef(null);
 
-  const [me, setMe] = useState(() => getCurrentUser());
+  const [me, setMe] = useState(() => readLocalUser());
+
   const [name, setName] = useState(me?.name || "");
   const [phone, setPhone] = useState(me?.phone || "");
+  const [avatarUrl, setAvatarUrl] = useState(me?.avatar || "");
+
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
+  const normalizePhone = (raw) => String(raw || "").replace(/\D/g, "");
+  const safeTrim = (v) => String(v ?? "").trim();
+
   useEffect(() => {
-    const u = getCurrentUser();
-    setMe(u);
-    setName(u?.name || "");
-    setPhone(u?.phone || "");
-  }, []);
+    const local = readLocalUser();
+    setMe(local);
 
-  const avatarSrc = useMemo(() => me?.avatar || "/images/cat.png", [me]);
-
-  const pickFile = () => fileRef.current?.click();
-
-  const onAvatarChange = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith("image/")) {
-      setErr("File harus gambar.");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      setErr("Ukuran gambar max 2MB.");
+    if (!local?.id) {
+      setLoading(false);
       return;
     }
 
-    const toDataURL = (f) =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(f);
-      });
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    try {
+    (async () => {
       setErr("");
       setMsg("");
-      const dataUrl = await toDataURL(file);
+      setLoading(true);
 
-      const updated = updateCurrentUser({ avatar: dataUrl });
-      setMe(updated);
-      setMsg("Foto profil diperbarui.");
+      try {
+        const res = await fetch(`${USERS_ENDPOINT}/${local.id}`, {
+          signal: controller.signal,
+        });
 
-      window.dispatchEvent(new Event("pawkost:auth"));
-    } catch {
-      setErr("Gagal update foto.");
-    } finally {
-      e.target.value = "";
-    }
-  };
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(`Gagal memuat profil. (${res.status}) ${text}`);
+        }
 
-  const onSave = async (e) => {
-    e.preventDefault();
+        const fresh = await res.json();
+
+        const merged = { ...(local || {}), ...(fresh || {}) };
+        setMe(merged);
+
+        setName(merged?.name || "");
+        setPhone(merged?.phone || "");
+        setAvatarUrl(merged?.avatar || "");
+
+        localStorage.setItem("paw_user", JSON.stringify(merged));
+        window.dispatchEvent(new Event("paw_auth_change"));
+      } catch (e) {
+        if (e?.name === "AbortError") return;
+        setErr(e?.message || "Gagal memuat profil");
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
+  }, []);
+
+  const avatarSrc = useMemo(
+    () => safeTrim(avatarUrl) || me?.avatar || "/images/cat.png",
+
+    [avatarUrl, me?.avatar]
+  );
+
+  const savePatch = async (patch, successMsg) => {
+    if (!me?.id) return;
+
     setSaving(true);
-    setMsg("");
     setErr("");
+    setMsg("");
 
     try {
-      const updated = updateCurrentUser({ name, phone });
-      setMe(updated);
-      setMsg("Perubahan tersimpan.");
+      const payload = {
+        ...patch,
+        updatedAt: new Date().toISOString(),
+      };
 
-      window.dispatchEvent(new Event("pawkost:auth"));
-    } catch (e2) {
-      setErr(e2?.message || "Gagal menyimpan.");
+      const res = await fetch(`${USERS_ENDPOINT}/${me.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(`Gagal menyimpan. (${res.status}) ${text}`);
+      }
+
+      const updated = await res.json();
+
+      setMe(updated);
+      localStorage.setItem("paw_user", JSON.stringify(updated));
+      window.dispatchEvent(new Event("paw_auth_change"));
+
+      setMsg(successMsg || "Perubahan tersimpan.");
+    } catch (e) {
+      setErr(e?.message || "Gagal menyimpan.");
     } finally {
       setSaving(false);
     }
+  };
+
+  const onSaveProfile = async (e) => {
+    e.preventDefault();
+
+    const nameV = safeTrim(name);
+    const phoneDigits = normalizePhone(phone);
+
+    if (!nameV) {
+      setErr("Nama wajib diisi.");
+      return;
+    }
+    if (!phoneDigits) {
+      setErr("No telepon wajib diisi (angka saja).");
+      return;
+    }
+
+    await savePatch(
+      { name: nameV, phone: phoneDigits },
+      "Perubahan profil tersimpan."
+    );
+  };
+
+  const onSaveAvatar = async () => {
+    const url = safeTrim(avatarUrl);
+
+    if (url && !/^https?:\/\/.+/i.test(url)) {
+      setErr("Avatar harus berupa URL valid (diawali http:// atau https://).");
+      return;
+    }
+
+    await savePatch({ avatar: url }, "Avatar berhasil diperbarui.");
   };
 
   if (!me) {
@@ -92,6 +158,16 @@ export default function SettingsProfile() {
           >
             Ke Login
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F6EBD8] flex items-center justify-center px-4">
+        <div className="rounded-2xl bg-white p-6 shadow border border-[#E5D5C0] text-center">
+          <div className="font-bold text-[#754A34]">Memuat profil...</div>
         </div>
       </div>
     );
@@ -115,7 +191,7 @@ export default function SettingsProfile() {
               Settings Profile
             </h1>
             <p className="mt-2 text-[#8B6F5C] font-semibold">
-              Kelola profil kamu (nama, telepon, foto).
+              Kelola profil kamu (nama, telepon, avatar URL).
             </p>
           </div>
 
@@ -130,7 +206,7 @@ export default function SettingsProfile() {
                   />
                 </div>
 
-                <div>
+                <div className="flex-1">
                   <div className="text-xl font-extrabold text-[#6B4B3B]">
                     {me.name}
                   </div>
@@ -138,23 +214,29 @@ export default function SettingsProfile() {
                     {me.email}
                   </div>
 
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 space-y-2">
+                    <Field label="URL Avatar (opsional)">
+                      <input
+                        value={avatarUrl}
+                        onChange={(e) => setAvatarUrl(e.target.value)}
+                        placeholder="https://....jpg/png"
+                        className="w-full rounded-[18px] bg-white px-6 py-4 text-[16px] text-[#6B4B3B]
+                                   shadow-[0_10px_26px_rgba(0,0,0,0.08)]
+                                   outline-none ring-1 ring-black/5
+                                   focus:ring-2 focus:ring-black/10 transition"
+                        disabled={saving}
+                      />
+                    </Field>
+
                     <button
                       type="button"
-                      onClick={pickFile}
+                      onClick={onSaveAvatar}
+                      disabled={saving}
                       className="rounded-full bg-[#C6A892] px-4 py-2 text-sm font-bold text-white
-                                 hover:brightness-95 transition shadow"
+                                 hover:brightness-95 transition shadow disabled:opacity-60"
                     >
-                      Ganti Foto
+                      {saving ? "Menyimpan..." : "Simpan Avatar"}
                     </button>
-
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={onAvatarChange}
-                    />
                   </div>
                 </div>
               </div>
@@ -167,12 +249,12 @@ export default function SettingsProfile() {
                 </div>
               )}
               {err && (
-                <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 whitespace-pre-line">
                   {err}
                 </div>
               )}
 
-              <form onSubmit={onSave} className="space-y-5">
+              <form onSubmit={onSaveProfile} className="space-y-5">
                 <Field label="Nama">
                   <input
                     value={name}
@@ -182,12 +264,13 @@ export default function SettingsProfile() {
                                outline-none ring-1 ring-black/5
                                focus:ring-2 focus:ring-black/10 transition"
                     placeholder="Nama kamu"
+                    disabled={saving}
                   />
                 </Field>
 
                 <Field label="Email (tidak bisa diubah)">
                   <input
-                    value={me.email}
+                    value={me.email || ""}
                     disabled
                     className="w-full rounded-[18px] bg-gray-50 px-6 py-4 text-[16px] text-[#6B4B3B]
                                ring-1 ring-black/5"
@@ -203,6 +286,8 @@ export default function SettingsProfile() {
                                outline-none ring-1 ring-black/5
                                focus:ring-2 focus:ring-black/10 transition"
                     placeholder="08xxxxxxxxxx"
+                    disabled={saving}
+                    inputMode="numeric"
                   />
                 </Field>
 
@@ -220,8 +305,6 @@ export default function SettingsProfile() {
             </div>
           </div>
         </div>
-
-        {/* ✅ TEKS FOOTER SUDAH DIHILANGKAN */}
       </div>
     </div>
   );
@@ -236,4 +319,14 @@ function Field({ label, children }) {
       {children}
     </div>
   );
+}
+
+function readLocalUser() {
+  try {
+    const raw = localStorage.getItem("paw_user");
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
